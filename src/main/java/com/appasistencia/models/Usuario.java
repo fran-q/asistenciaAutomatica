@@ -107,6 +107,7 @@ public class Usuario {
     public void addUsuarioPlantillaBiometrica(com.appasistencia.models.UsuarioPlantillaBiometrica usuarioPlantilla) {
         usuarioPlantilla.setUsuario(this);
         this.usuarioPlantillas.add(usuarioPlantilla);
+        
     }
 
     public String getIdUsuario() {
