@@ -1,62 +1,82 @@
 package com.appasistencia.models;
 
 import jakarta.persistence.*;
-import org.springframework.http.ResponseEntity;
-
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "plantilla_biometrica")
 public class PlantillaBiometrica {
 
     //Atributos
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
-    private String plantillaBiometrica;
-    private LocalDate fechaCreacion;
-    private boolean esActivo = true;
-    @OneToMany(mappedBy = "plantillaBiometrica", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UsuarioPlantillaBiometrica> usuarios = new ArrayList<>();
+    @Column(name = "id_plantilla_biometrica")
+    private Long idPlantillaBiometrica;
+
+    @ManyToOne
+    @JoinColumn(name = "fk_id_usuario")
+    private Usuario usuario;
+
+    @Lob
+    @Column(name = "modelo_facial", columnDefinition = "LONGBLOB")
+    private byte[] modeloFacial;
+
+    @Column(name = "cantidad_muestras")
+    private int cantidadMuestras;
+
+    @Column(name = "fecha_creacion")
+    private LocalDateTime fechaCreacion;
+
+    private boolean activo = true;
 
     //Constructores
     public PlantillaBiometrica() {}
 
-    public PlantillaBiometrica(String plantillaBiometrica) {
-        this.plantillaBiometrica = plantillaBiometrica;
-        this.fechaCreacion = LocalDate.now();
-        this.esActivo = true;
+    public PlantillaBiometrica(Usuario usuario, byte[] modeloFacial, int cantidadMuestras) {
+        this.usuario = usuario;
+        this.modeloFacial = modeloFacial;
+        this.cantidadMuestras = cantidadMuestras;
+        this.fechaCreacion = LocalDateTime.now();
+        this.activo = true;
     }
 
     //Getters y Setters
-    public int getId() {
-        return id;
+    public Long getIdPlantillaBiometrica() {
+        return idPlantillaBiometrica;
     }
 
-    public String getPlantillaBiometrica() {
-        return plantillaBiometrica;
+    public Usuario getUsuario() {
+        return usuario;
     }
-    public void setPlantillaBiometrica(String plantillaBiometrica) {
-        this.plantillaBiometrica = plantillaBiometrica;
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 
-    public LocalDate getFechaCreacion() {
+    public byte[] getModeloFacial() {
+        return modeloFacial;
+    }
+    public void setModeloFacial(byte[] modeloFacial) {
+        this.modeloFacial = modeloFacial;
+    }
+
+    public int getCantidadMuestras() {
+        return cantidadMuestras;
+    }
+    public void setCantidadMuestras(int cantidadMuestras) {
+        this.cantidadMuestras = cantidadMuestras;
+    }
+
+    public LocalDateTime getFechaCreacion() {
         return fechaCreacion;
     }
-    public void setFechaCreacion(LocalDate fechaCreacion) {
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
     }
 
-    public boolean isEsActivo() {
-        return esActivo;
+    public boolean isActivo() {
+        return activo;
     }
-    public void setEsActivo(boolean esActivo) {
-        this.esActivo = esActivo;
-    }
-
-    public void addUsuarioPlantillaBiometrica(UsuarioPlantillaBiometrica usuarioPlantilla) {
-        usuarioPlantilla.setPlantillaBiometrica(this);
-        this.usuarios.add(usuarioPlantilla);
+    public void setActivo(boolean activo) {
+        this.activo = activo;
     }
 }

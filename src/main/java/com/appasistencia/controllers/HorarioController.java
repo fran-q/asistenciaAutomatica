@@ -1,82 +1,82 @@
 package com.appasistencia.controllers;
 
 import com.appasistencia.dtos.HorarioDTO;
+import com.appasistencia.models.DiaSemana;
 import com.appasistencia.models.Horario;
-import com.appasistencia.models.Usuario;
+import com.appasistencia.repositories.AsignacionRepository;
 import com.appasistencia.repositories.HorarioRepository;
-import com.appasistencia.repositories.UsuarioRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/horarios")
 public class HorarioController {
 
     private final HorarioRepository horarioRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final AsignacionRepository asignacionRepository;
 
-    public HorarioController(HorarioRepository horarioRepository, UsuarioRepository usuarioRepository) {
+    public HorarioController(HorarioRepository horarioRepository, AsignacionRepository asignacionRepository) {
         this.horarioRepository = horarioRepository;
-        this.usuarioRepository = usuarioRepository;
+        this.asignacionRepository = asignacionRepository;
     }
 
-    //Todos los horarios
-    @GetMapping("/horarios")
-    public List<HorarioDTO> getHorarios() {
-        return horarioRepository.findAll()
-                .stream()
-                .map(HorarioDTO::new)
-                .toList();
+    @GetMapping
+    public List<Horario> listarTodos() {
+        return horarioRepository.findByActivoTrue();
     }
 
-    //Horario por ID
-    @GetMapping("/horarios/{id}")
-    public ResponseEntity<HorarioDTO> getHorario(@PathVariable Integer id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<Horario> obtenerPorId(@PathVariable Long id) {
         return horarioRepository.findById(id)
-                .map(horario -> ResponseEntity.ok(new HorarioDTO(horario)))
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    //Agregar horario
-    @PostMapping("/usuarios/{usuarioId}/horarios")
-    public ResponseEntity<?> crearHorario(@PathVariable Integer usuarioId, @RequestBody Horario horario) {
-        Usuario usuario = usuarioRepository.findById(usuarioId).orElse(null);
-        if (usuario == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Usuario no encontrado");
-        }
-        usuario.addHorario(horario);
-        usuarioRepository.save(usuario);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Horario creado correctamente");
+    @GetMapping("/asignacion/{idAsignacion}")
+    public List<Horario> listarPorAsignacion(@PathVariable Long idAsignacion) {
+        return horarioRepository.findByAsignacionIdAsignacionAndActivoTrue(idAsignacion);
     }
 
-    //Actualizacion de horario, no cambia el
-    @PutMapping("/horarios/{id}")
-    public ResponseEntity<?> actualizarHorario(@PathVariable Integer id, @RequestBody Horario nuevosDatos) {
-        return horarioRepository.findById(id)
-                .map(horario -> {
-                    horario.setDiaSemana(nuevosDatos.getDiaSemana());
-                    horario.setHoraEntrada(nuevosDatos.getHoraEntrada());
-                    horario.setHoraSalida(nuevosDatos.getHoraSalida());
-                    horarioRepository.save(horario);
-                    return ResponseEntity.ok("Horario actualizado correctamente");
-                })
-                .orElse(ResponseEntity.notFound().build());
+    @GetMapping("/dia/{dia}")
+    public List<Horario> listarPorDia(@PathVariable String dia) {
+        return horarioRepository.findByDiaSemanaAndActivoTrue(DiaSemana.valueOf(dia.toUpperCase()));
     }
 
-    //Baja logica del horario
-    @PatchMapping("/horarios/{id}/baja")
-    public ResponseEntity<?> darBajaHorario(@PathVariable Integer id) {
-        return horarioRepository.findById(id)
-                .map(horario -> {
-                    horario.setEsActivo(false);
-                    horarioRepository.save(horario);
-                    return ResponseEntity.ok("Horario dado de baja correctamente");
-                })
-                .orElse(ResponseEntity.notFound().build());
+    @PostMapping
+    public ResponseEntity<Horario> crear(@RequestBody HorarioDTO dto) {
+        return asignacionRepository.findById(dto.getIdAsignacion()).map(asignacion -> {
+            Horario horario = new Horario(
+                    asignacion,
+                    DiaSemana.valueOf(dto.getDiaSemana()),
+                    LocalTime.parse(dto.getHoraInicio()),
+                    LocalTime.parse(dto.getHoraFin())
+            );
+            return ResponseEntity.ok(horarioRepository.save(horario));
+        }).orElse(ResponseEntity.badRequest().build());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Horario> actualizar(@PathVariable Long id, @RequestBody HorarioDTO dto) {
+        return horarioRepository.findById(id).map(horario -> {
+            if (dto.getDiaSemana() != null) horario.setDiaSemana(DiaSemana.valueOf(dto.getDiaSemana()));
+            if (dto.getHoraInicio() != null) horario.setHoraInicio(LocalTime.parse(dto.getHoraInicio()));
+            if (dto.getHoraFin() != null) horario.setHoraFin(LocalTime.parse(dto.getHoraFin()));
+            if (dto.getIdAsignacion() != null) {
+                asignacionRepository.findById(dto.getIdAsignacion()).ifPresent(horario::setAsignacion);
+            }
+            return ResponseEntity.ok(horarioRepository.save(horario));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        return horarioRepository.findById(id).map(horario -> {
+            horario.setActivo(false);
+            horarioRepository.save(horario);
+            return ResponseEntity.ok().<Void>build();
+        }).orElse(ResponseEntity.notFound().build());
     }
 }

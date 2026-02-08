@@ -1,46 +1,38 @@
 package com.appasistencia.dtos;
 
-import com.appasistencia.models.Asistencia;
-import java.time.LocalDateTime;
-
 public class AsistenciaDTO {
-    //Atributos
-    private int id;
-    private LocalDateTime horaIngresoRegistro;
-    private LocalDateTime horaSalidaRegistro;
-    private Boolean verificadoBiometrico;
+    private Long idProfesor;
+    private Long idAsignacion;
+    private String fecha;
+    private String horaEntrada;
+    private String horaSalida;
+    private String estado;
+    private String modoRegistro;
     private String observaciones;
 
-    //Constructores
     public AsistenciaDTO() {}
 
-    public AsistenciaDTO(Asistencia asistencia) {
-        this.id = asistencia.getId();
-        this.horaIngresoRegistro = asistencia.getHoraIngresoRegistro();
-        this.horaSalidaRegistro = asistencia.getHoraSalidaRegistro();
-        this.verificadoBiometrico = asistencia.getVerificadoBiometrico();
-        this.observaciones = asistencia.getObservaciones();
-    }
+    public Long getIdProfesor() { return idProfesor; }
+    public void setIdProfesor(Long idProfesor) { this.idProfesor = idProfesor; }
 
-    //Getters
-    public int getId() {
-        return id;
-    }
+    public Long getIdAsignacion() { return idAsignacion; }
+    public void setIdAsignacion(Long idAsignacion) { this.idAsignacion = idAsignacion; }
 
-    public LocalDateTime getHoraIngresoRegistro() {
-        return horaIngresoRegistro;
-    }
+    public String getFecha() { return fecha; }
+    public void setFecha(String fecha) { this.fecha = fecha; }
 
-    public LocalDateTime getHoraSalidaRegistro() {
-        return horaSalidaRegistro;
-    }
+    public String getHoraEntrada() { return horaEntrada; }
+    public void setHoraEntrada(String horaEntrada) { this.horaEntrada = horaEntrada; }
 
-    public Boolean getVerificadoBiometrico() {
-        return verificadoBiometrico;
-    }
+    public String getHoraSalida() { return horaSalida; }
+    public void setHoraSalida(String horaSalida) { this.horaSalida = horaSalida; }
 
-    public String getObservaciones() {
-        return observaciones;
-    }
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
 
+    public String getModoRegistro() { return modoRegistro; }
+    public void setModoRegistro(String modoRegistro) { this.modoRegistro = modoRegistro; }
+
+    public String getObservaciones() { return observaciones; }
+    public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
 }

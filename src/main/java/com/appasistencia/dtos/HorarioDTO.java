@@ -1,34 +1,22 @@
 package com.appasistencia.dtos;
 
-import com.appasistencia.models.DiaSemana;
-import com.appasistencia.models.Horario;
-
-import java.io.DataInput;
-import java.time.LocalTime;
-
 public class HorarioDTO {
-    //Atributos
-    private int id;
-    private DiaSemana diaSemana;
-    private LocalTime horaEntrada;
-    private LocalTime horaSalida;
-    private boolean esActivo;
+    private Long idAsignacion;
+    private String diaSemana;
+    private String horaInicio;
+    private String horaFin;
 
-    //Construcotores
     public HorarioDTO() {}
 
-    public HorarioDTO(Horario horario) {
-        this.id = horario.getId();
-        this.diaSemana = horario.getDiaSemana();
-        this.horaEntrada = horario.getHoraEntrada();
-        this.horaSalida = horario.getHoraSalida();
-        this.esActivo = horario.isEsActivo();
-    }
+    public Long getIdAsignacion() { return idAsignacion; }
+    public void setIdAsignacion(Long idAsignacion) { this.idAsignacion = idAsignacion; }
 
-    //Getters
-    public int getId() { return id; }
-    public DiaSemana getDiaSemana() { return diaSemana; }
-    public LocalTime getHoraEntrada() { return horaEntrada; }
-    public LocalTime getHoraSalida() { return horaSalida; }
-    public boolean isEsActivo() { return esActivo; }
+    public String getDiaSemana() { return diaSemana; }
+    public void setDiaSemana(String diaSemana) { this.diaSemana = diaSemana; }
+
+    public String getHoraInicio() { return horaInicio; }
+    public void setHoraInicio(String horaInicio) { this.horaInicio = horaInicio; }
+
+    public String getHoraFin() { return horaFin; }
+    public void setHoraFin(String horaFin) { this.horaFin = horaFin; }
 }

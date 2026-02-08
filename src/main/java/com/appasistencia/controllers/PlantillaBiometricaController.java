@@ -3,74 +3,58 @@ package com.appasistencia.controllers;
 import com.appasistencia.dtos.PlantillaBiometricaDTO;
 import com.appasistencia.models.PlantillaBiometrica;
 import com.appasistencia.repositories.PlantillaBiometricaRepository;
-import org.springframework.http.HttpStatus;
+import com.appasistencia.repositories.UsuarioRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/plantillas-biometricas")
 public class PlantillaBiometricaController {
 
     private final PlantillaBiometricaRepository plantillaRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    public PlantillaBiometricaController(PlantillaBiometricaRepository plantillaRepository) {
+    public PlantillaBiometricaController(PlantillaBiometricaRepository plantillaRepository,
+                                          UsuarioRepository usuarioRepository) {
         this.plantillaRepository = plantillaRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
-    //Listado de todas las plantillas
-    @GetMapping("/plantillas")
-    public List<PlantillaBiometricaDTO> getPlantillas() {
-        return plantillaRepository.findAll()
-                .stream()
-                .map(PlantillaBiometricaDTO::new)
-                .toList();
+    @GetMapping
+    public List<PlantillaBiometrica> listarTodas() {
+        return plantillaRepository.findByActivoTrue();
     }
 
-    //Plantilla buscada por ID
-    @GetMapping("/plantillas/{id}")
-    public ResponseEntity<PlantillaBiometricaDTO> getPlantilla(@PathVariable Integer id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<PlantillaBiometrica> obtenerPorId(@PathVariable Long id) {
         return plantillaRepository.findById(id)
-                .map(plantilla -> ResponseEntity.ok(new PlantillaBiometricaDTO(plantilla)))
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    //Creacion de plantilla, si no se especifica fecha se ingresa la actual
-    @PostMapping("/plantillas")
-    public ResponseEntity<?> crearPlantilla(@RequestBody PlantillaBiometrica plantilla) {
-        if (plantilla.getFechaCreacion() == null) {
-            plantilla.setFechaCreacion(LocalDate.now());
-        }
-        plantilla.setEsActivo(true);
-        plantillaRepository.save(plantilla);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Plantilla creada correctamente");
+    @GetMapping("/usuario/{idUsuario}")
+    public List<PlantillaBiometrica> listarPorUsuario(@PathVariable Long idUsuario) {
+        return plantillaRepository.findByUsuarioIdUsuarioAndActivoTrue(idUsuario);
     }
 
-    //Actualizacion de los datos de la plantilla
-    @PutMapping("/plantillas/{id}")
-    public ResponseEntity<?> actualizarPlantilla(@PathVariable Integer id, @RequestBody PlantillaBiometrica nuevosDatos) {
-        return plantillaRepository.findById(id)
-                .map(plantilla -> {
-                    plantilla.setPlantillaBiometrica(nuevosDatos.getPlantillaBiometrica());
-                    plantilla.setFechaCreacion(nuevosDatos.getFechaCreacion());
-                    plantillaRepository.save(plantilla);
-                    return ResponseEntity.ok("Plantilla actualizada correctamente");
-                })
-                .orElse(ResponseEntity.notFound().build());
+    @PostMapping
+    public ResponseEntity<PlantillaBiometrica> crear(@RequestBody PlantillaBiometricaDTO dto) {
+        return usuarioRepository.findById(dto.getIdUsuario()).map(usuario -> {
+            PlantillaBiometrica plantilla = new PlantillaBiometrica(
+                    usuario, null, dto.getCantidadMuestras()
+            );
+            return ResponseEntity.ok(plantillaRepository.save(plantilla));
+        }).orElse(ResponseEntity.badRequest().build());
     }
 
-    //Baja logica de la plantilla
-    @PatchMapping("/plantillas/{id}/baja")
-    public ResponseEntity<?> darBajaPlantilla(@PathVariable Integer id) {
-        return plantillaRepository.findById(id)
-                .map(plantilla -> {
-                    plantilla.setEsActivo(false);
-                    plantillaRepository.save(plantilla);
-                    return ResponseEntity.ok("Plantilla dada de baja correctamente");
-                })
-                .orElse(ResponseEntity.notFound().build());
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        return plantillaRepository.findById(id).map(plantilla -> {
+            plantilla.setActivo(false);
+            plantillaRepository.save(plantilla);
+            return ResponseEntity.ok().<Void>build();
+        }).orElse(ResponseEntity.notFound().build());
     }
 }

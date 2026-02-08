@@ -1,48 +1,89 @@
 package com.appasistencia.models;
 
-import com.appasistencia.models.Rol;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "usuario")
 public class Usuario {
 
     //Atributos
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    @Column(name = "id_usuario")
+    private Long idUsuario;
+
     private String nombre;
     private String apellido;
-    private String correo;
+    private String email;
     private String telefono;
+    private String direccion;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_documento")
+    private TipoDocumento tipoDocumento;
+
+    @Column(name = "numero_documento")
+    private String numeroDocumento;
+
+    @Enumerated(EnumType.STRING)
+    private Genero genero;
+
     private String contrasena;
+
     @Enumerated(EnumType.STRING)
     private Rol rol;
-    private boolean esActivo = true;
+
+    @Column(name = "foto_perfil")
+    private String fotoPerfil;
+
+    @ManyToOne
+    @JoinColumn(name = "fk_id_institucion")
+    private Institucion institucion;
+
+    @Column(name = "fecha_creacion")
+    private LocalDateTime fechaCreacion;
+
+    private boolean activo = true;
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL)
+    private UsuarioProfesor usuarioProfesor;
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL)
+    private UsuarioAlumno usuarioAlumno;
+
+    @JsonIgnore
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Asistencia> asistencias = new ArrayList<>();
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Horario> horarios = new ArrayList<>();
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UsuarioPlantillaBiometrica> usuarioPlantillas = new ArrayList<>();
+    private List<PlantillaBiometrica> plantillasBiometricas = new ArrayList<>();
 
     //Constructores
     public Usuario() {}
 
-    public Usuario(String nombre, String apellido, String correo, String telefono, String contrasena, Rol rol) {
+    public Usuario(String nombre, String apellido, String email, String telefono, String direccion,
+                   TipoDocumento tipoDocumento, String numeroDocumento, Genero genero,
+                   String contrasena, Rol rol) {
         this.nombre = nombre;
         this.apellido = apellido;
-        this.correo = correo;
+        this.email = email;
         this.telefono = telefono;
+        this.direccion = direccion;
+        this.tipoDocumento = tipoDocumento;
+        this.numeroDocumento = numeroDocumento;
+        this.genero = genero;
         this.contrasena = contrasena;
         this.rol = rol;
-        this.esActivo = true;
+        this.fechaCreacion = LocalDateTime.now();
+        this.activo = true;
     }
 
     //Getters y Setters
-    public int getId() {
-        return id;
+    public Long getIdUsuario() {
+        return idUsuario;
     }
 
     public String getNombre() {
@@ -59,11 +100,11 @@ public class Usuario {
         this.apellido = apellido;
     }
 
-    public String getCorreo() {
-        return correo;
+    public String getEmail() {
+        return email;
     }
-    public void setCorreo(String correo) {
-        this.correo = correo;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getTelefono() {
@@ -71,6 +112,34 @@ public class Usuario {
     }
     public void setTelefono(String telefono) {
         this.telefono = telefono;
+    }
+
+    public String getDireccion() {
+        return direccion;
+    }
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
+    }
+
+    public TipoDocumento getTipoDocumento() {
+        return tipoDocumento;
+    }
+    public void setTipoDocumento(TipoDocumento tipoDocumento) {
+        this.tipoDocumento = tipoDocumento;
+    }
+
+    public String getNumeroDocumento() {
+        return numeroDocumento;
+    }
+    public void setNumeroDocumento(String numeroDocumento) {
+        this.numeroDocumento = numeroDocumento;
+    }
+
+    public Genero getGenero() {
+        return genero;
+    }
+    public void setGenero(Genero genero) {
+        this.genero = genero;
     }
 
     public String getContrasena() {
@@ -87,30 +156,57 @@ public class Usuario {
         this.rol = rol;
     }
 
-    public boolean getEsActivo() {
-        return esActivo;
+    public String getFotoPerfil() {
+        return fotoPerfil;
     }
-    public void setEsActivo(boolean esActivo) {
-        this.esActivo = esActivo;
-    }
-
-    public void addAsistencia(Asistencia asistencia) {
-        asistencia.setUsuario(this);
-        this.asistencias.add(asistencia);
+    public void setFotoPerfil(String fotoPerfil) {
+        this.fotoPerfil = fotoPerfil;
     }
 
-    public void addHorario(Horario horario) {
-        horario.setUsuario(this);
-        this.horarios.add(horario);
+    public Institucion getInstitucion() {
+        return institucion;
+    }
+    public void setInstitucion(Institucion institucion) {
+        this.institucion = institucion;
     }
 
-    public void addUsuarioPlantillaBiometrica(com.appasistencia.models.UsuarioPlantillaBiometrica usuarioPlantilla) {
-        usuarioPlantilla.setUsuario(this);
-        this.usuarioPlantillas.add(usuarioPlantilla);
-        
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
     }
 
-    public String getIdUsuario() {
-        return null;
+    public boolean isActivo() {
+        return activo;
+    }
+    public void setActivo(boolean activo) {
+        this.activo = activo;
+    }
+
+    public UsuarioProfesor getUsuarioProfesor() {
+        return usuarioProfesor;
+    }
+    public void setUsuarioProfesor(UsuarioProfesor usuarioProfesor) {
+        this.usuarioProfesor = usuarioProfesor;
+    }
+
+    public UsuarioAlumno getUsuarioAlumno() {
+        return usuarioAlumno;
+    }
+    public void setUsuarioAlumno(UsuarioAlumno usuarioAlumno) {
+        this.usuarioAlumno = usuarioAlumno;
+    }
+
+    public List<PlantillaBiometrica> getPlantillasBiometricas() {
+        return plantillasBiometricas;
+    }
+    public void setPlantillasBiometricas(List<PlantillaBiometrica> plantillasBiometricas) {
+        this.plantillasBiometricas = plantillasBiometricas;
+    }
+
+    public void addPlantillaBiometrica(PlantillaBiometrica plantilla) {
+        plantilla.setUsuario(this);
+        this.plantillasBiometricas.add(plantilla);
     }
 }
