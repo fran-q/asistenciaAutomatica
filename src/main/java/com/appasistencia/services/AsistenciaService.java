@@ -88,8 +88,12 @@ public class AsistenciaService {
     public AsistenciaResponseDTO crear(AsistenciaDTO dto) {
         UsuarioProfesor profesor = profesorRepository.findById(dto.getIdProfesor())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Profesor", dto.getIdProfesor()));
-        Asignacion asignacion = asignacionRepository.findById(dto.getIdAsignacion())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Asignacion", dto.getIdAsignacion()));
+
+        Asignacion asignacion = null;
+        if (dto.getIdAsignacion() != null) {
+            asignacion = asignacionRepository.findById(dto.getIdAsignacion())
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Asignacion", dto.getIdAsignacion()));
+        }
 
         EstadoAsistencia estado;
         ModoRegistro modo;

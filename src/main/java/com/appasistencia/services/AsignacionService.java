@@ -66,6 +66,20 @@ public class AsignacionService {
         return AsignacionResponseDTO.fromEntity(asignacionRepository.save(asignacion));
     }
 
+    public AsignacionResponseDTO actualizar(Long id, AsignacionDTO dto) {
+        Asignacion asignacion = buscarPorId(id);
+
+        UsuarioProfesor profesor = profesorRepository.findById(dto.getIdProfesor())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Profesor", dto.getIdProfesor()));
+        CursoMateria cursoMateria = cursoMateriaRepository.findById(dto.getIdCursoMateria())
+                .orElseThrow(() -> new RecursoNoEncontradoException("CursoMateria", dto.getIdCursoMateria()));
+
+        asignacion.setProfesor(profesor);
+        asignacion.setCursoMateria(cursoMateria);
+
+        return AsignacionResponseDTO.fromEntity(asignacionRepository.save(asignacion));
+    }
+
     public void eliminar(Long id) {
         Asignacion asignacion = buscarPorId(id);
         asignacion.setActivo(false);

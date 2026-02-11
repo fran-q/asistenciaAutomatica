@@ -72,6 +72,20 @@ public class InscripcionService {
         return InscripcionResponseDTO.fromEntity(inscripcionRepository.save(inscripcion));
     }
 
+    public InscripcionResponseDTO actualizar(Long id, InscripcionDTO dto) {
+        Inscripcion inscripcion = buscarPorId(id);
+
+        UsuarioAlumno alumno = alumnoRepository.findById(dto.getIdAlumno())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Alumno", dto.getIdAlumno()));
+        Curso curso = cursoRepository.findById(dto.getIdCurso())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Curso", dto.getIdCurso()));
+
+        inscripcion.setAlumno(alumno);
+        inscripcion.setCurso(curso);
+
+        return InscripcionResponseDTO.fromEntity(inscripcionRepository.save(inscripcion));
+    }
+
     public void eliminar(Long id) {
         Inscripcion inscripcion = buscarPorId(id);
         inscripcion.setActivo(false);

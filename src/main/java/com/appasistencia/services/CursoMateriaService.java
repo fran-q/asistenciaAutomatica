@@ -65,6 +65,20 @@ public class CursoMateriaService {
         return CursoMateriaResponseDTO.fromEntity(cursoMateriaRepository.save(cm));
     }
 
+    public CursoMateriaResponseDTO actualizar(Long id, CursoMateriaDTO dto) {
+        CursoMateria cm = buscarPorId(id);
+
+        Curso curso = cursoRepository.findById(dto.getIdCurso())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Curso", dto.getIdCurso()));
+        Materia materia = materiaRepository.findById(dto.getIdMateria())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Materia", dto.getIdMateria()));
+
+        cm.setCurso(curso);
+        cm.setMateria(materia);
+
+        return CursoMateriaResponseDTO.fromEntity(cursoMateriaRepository.save(cm));
+    }
+
     public void eliminar(Long id) {
         CursoMateria cm = buscarPorId(id);
         cm.setActivo(false);

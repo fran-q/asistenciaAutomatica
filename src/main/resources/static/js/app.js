@@ -72,7 +72,8 @@ const App = {
             'asignaciones': 'Asignaciones',
             'horarios': 'Horarios',
             'asistencias': 'Asistencias',
-            'inscripciones': 'Inscripciones'
+            'inscripciones': 'Inscripciones',
+            'notificaciones': 'Notificaciones'
         };
         UI.setBreadcrumb(['Inicio', labels[page] || page]);
 
@@ -91,7 +92,8 @@ const App = {
             'asignaciones': () => AsignacionesPage.render(),
             'horarios': () => HorariosPage.render(),
             'asistencias': () => AsistenciasPage.render(),
-            'inscripciones': () => InscripcionesPage.render()
+            'inscripciones': () => InscripcionesPage.render(),
+            'notificaciones': () => NotificacionesPage.render()
         };
 
         if (pages[page]) {

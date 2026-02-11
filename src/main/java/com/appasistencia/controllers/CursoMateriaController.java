@@ -41,6 +41,11 @@ public class CursoMateriaController {
         return new ResponseEntity<>(creado, HttpStatus.CREATED);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<CursoMateriaResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody CursoMateriaDTO dto) {
+        return ResponseEntity.ok(cursoMateriaService.actualizar(id, dto));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         cursoMateriaService.eliminar(id);

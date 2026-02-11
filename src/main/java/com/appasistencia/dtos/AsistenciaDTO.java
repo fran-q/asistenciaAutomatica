@@ -9,7 +9,6 @@ public class AsistenciaDTO {
     @NotNull(message = "El ID del profesor es obligatorio")
     private Long idProfesor;
 
-    @NotNull(message = "El ID de la asignación es obligatorio")
     private Long idAsignacion;
 
     @NotBlank(message = "La fecha es obligatoria")

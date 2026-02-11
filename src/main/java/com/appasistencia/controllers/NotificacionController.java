@@ -41,6 +41,11 @@ public class NotificacionController {
         return new ResponseEntity<>(creada, HttpStatus.CREATED);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<NotificacionResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody NotificacionDTO dto) {
+        return ResponseEntity.ok(notificacionService.actualizar(id, dto));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         notificacionService.eliminar(id);

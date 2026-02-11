@@ -46,6 +46,11 @@ public class InscripcionController {
         return new ResponseEntity<>(creada, HttpStatus.CREATED);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<InscripcionResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody InscripcionDTO dto) {
+        return ResponseEntity.ok(inscripcionService.actualizar(id, dto));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         inscripcionService.eliminar(id);

@@ -19,12 +19,15 @@ const CarrerasPage = {
             columns: [
                 { label: 'ID', idKey: 'idCarrera' },
                 { label: 'Nombre' },
+                { label: 'Titulo' },
                 { label: 'Duracion' },
                 { label: 'Institucion' },
                 { label: 'Estado' }
             ],
             formFields: [
                 { key: 'nombre', label: 'Nombre', placeholder: 'Nombre de la carrera' },
+                { key: 'titulo', label: 'Titulo que otorga', placeholder: 'Ej: Licenciado en Informatica' },
+                { key: 'descripcion', label: 'Descripcion', type: 'textarea' },
                 { type: 'row-start' },
                 { key: 'duracionAnios', label: 'Duracion (anios)', type: 'number', placeholder: '4' },
                 { key: 'idInstitucion', label: 'Institucion', type: 'select', options: opts },
@@ -32,6 +35,8 @@ const CarrerasPage = {
             ],
             formToDto: (d) => ({
                 nombre: d.nombre,
+                titulo: d.titulo,
+                descripcion: d.descripcion || null,
                 duracionAnios: d.duracionAnios ? parseInt(d.duracionAnios) : null,
                 idInstitucion: d.idInstitucion ? parseInt(d.idInstitucion) : null
             }),
@@ -40,12 +45,13 @@ const CarrerasPage = {
                 return [
                     c.idCarrera,
                     c.nombre,
+                    c.titulo || '-',
                     c.duracionAnios ? `${c.duracionAnios} anios` : '-',
                     inst ? inst.nombre : `#${c.idInstitucion}`,
                     UI.activoBadge(c.activo)
                 ];
             },
-            searchFilter: (c, s) => c.nombre.toLowerCase().includes(s)
+            searchFilter: (c, s) => `${c.nombre} ${c.titulo || ''}`.toLowerCase().includes(s)
         });
         page.render();
     }

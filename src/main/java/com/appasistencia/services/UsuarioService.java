@@ -58,6 +58,9 @@ public class UsuarioService {
     }
 
     public UsuarioResponseDTO crear(UsuarioDTO dto) {
+        if (dto.getContrasena() == null || dto.getContrasena().isBlank()) {
+            throw new OperacionInvalidaException("La contraseña es obligatoria al crear un usuario");
+        }
         if (usuarioRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new RecursoDuplicadoException("Ya existe un usuario con el email: " + dto.getEmail());
         }

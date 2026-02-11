@@ -89,6 +89,40 @@ public class NotificacionService {
         return NotificacionResponseDTO.fromEntity(notificacionRepository.save(notificacion));
     }
 
+    public NotificacionResponseDTO actualizar(Long id, NotificacionDTO dto) {
+        Notificacion notificacion = buscarPorId(id);
+
+        UsuarioAlumno alumno = alumnoRepository.findById(dto.getIdAlumno())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Alumno", dto.getIdAlumno()));
+
+        TipoNotificacion tipo;
+        try {
+            tipo = TipoNotificacion.valueOf(dto.getTipo().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new OperacionInvalidaException("Tipo de notificacion invalido: " + dto.getTipo());
+        }
+
+        notificacion.setAlumno(alumno);
+        notificacion.setTipo(tipo);
+        notificacion.setTitulo(dto.getTitulo());
+        notificacion.setMensaje(dto.getMensaje());
+
+        if (dto.getIdAsistencia() != null) {
+            asistenciaRepository.findById(dto.getIdAsistencia())
+                    .ifPresent(notificacion::setAsistencia);
+        } else {
+            notificacion.setAsistencia(null);
+        }
+        if (dto.getIdAsignacion() != null) {
+            asignacionRepository.findById(dto.getIdAsignacion())
+                    .ifPresent(notificacion::setAsignacion);
+        } else {
+            notificacion.setAsignacion(null);
+        }
+
+        return NotificacionResponseDTO.fromEntity(notificacionRepository.save(notificacion));
+    }
+
     public void eliminar(Long id) {
         Notificacion notificacion = buscarPorId(id);
         notificacion.setActivo(false);
