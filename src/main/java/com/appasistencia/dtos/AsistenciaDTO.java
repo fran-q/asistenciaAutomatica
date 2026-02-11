@@ -1,13 +1,32 @@
 package com.appasistencia.dtos;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 public class AsistenciaDTO {
+
+    @NotNull(message = "El ID del profesor es obligatorio")
     private Long idProfesor;
+
+    @NotNull(message = "El ID de la asignación es obligatorio")
     private Long idAsignacion;
+
+    @NotBlank(message = "La fecha es obligatoria")
     private String fecha;
+
+    @NotBlank(message = "La hora de entrada es obligatoria")
     private String horaEntrada;
+
     private String horaSalida;
+
+    @NotBlank(message = "El estado de asistencia es obligatorio")
     private String estado;
+
+    @NotBlank(message = "El modo de registro es obligatorio")
     private String modoRegistro;
+
+    @Size(max = 500, message = "Las observaciones no pueden superar los 500 caracteres")
     private String observaciones;
 
     public AsistenciaDTO() {}

@@ -1,9 +1,10 @@
 package com.appasistencia.controllers;
 
 import com.appasistencia.dtos.UsuarioAlumnoDTO;
-import com.appasistencia.models.UsuarioAlumno;
-import com.appasistencia.repositories.UsuarioAlumnoRepository;
-import com.appasistencia.repositories.UsuarioRepository;
+import com.appasistencia.dtos.response.UsuarioAlumnoResponseDTO;
+import com.appasistencia.services.UsuarioAlumnoService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,49 +14,36 @@ import java.util.List;
 @RequestMapping("/api/alumnos")
 public class UsuarioAlumnoController {
 
-    private final UsuarioAlumnoRepository alumnoRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final UsuarioAlumnoService alumnoService;
 
-    public UsuarioAlumnoController(UsuarioAlumnoRepository alumnoRepository, UsuarioRepository usuarioRepository) {
-        this.alumnoRepository = alumnoRepository;
-        this.usuarioRepository = usuarioRepository;
+    public UsuarioAlumnoController(UsuarioAlumnoService alumnoService) {
+        this.alumnoService = alumnoService;
     }
 
     @GetMapping
-    public List<UsuarioAlumno> listarTodos() {
-        return alumnoRepository.findByActivoTrue();
+    public ResponseEntity<List<UsuarioAlumnoResponseDTO>> listarTodos() {
+        return ResponseEntity.ok(alumnoService.listarTodos());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UsuarioAlumno> obtenerPorId(@PathVariable Long id) {
-        return alumnoRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<UsuarioAlumnoResponseDTO> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(alumnoService.obtenerPorId(id));
     }
 
     @PostMapping
-    public ResponseEntity<UsuarioAlumno> crear(@RequestBody UsuarioAlumnoDTO dto) {
-        return usuarioRepository.findById(dto.getIdUsuario()).map(usuario -> {
-            UsuarioAlumno alumno = new UsuarioAlumno(usuario, dto.getLegajo(), dto.getPromedio());
-            return ResponseEntity.ok(alumnoRepository.save(alumno));
-        }).orElse(ResponseEntity.badRequest().build());
+    public ResponseEntity<UsuarioAlumnoResponseDTO> crear(@Valid @RequestBody UsuarioAlumnoDTO dto) {
+        UsuarioAlumnoResponseDTO creado = alumnoService.crear(dto);
+        return new ResponseEntity<>(creado, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UsuarioAlumno> actualizar(@PathVariable Long id, @RequestBody UsuarioAlumnoDTO dto) {
-        return alumnoRepository.findById(id).map(alumno -> {
-            alumno.setLegajo(dto.getLegajo());
-            alumno.setPromedio(dto.getPromedio());
-            return ResponseEntity.ok(alumnoRepository.save(alumno));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<UsuarioAlumnoResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody UsuarioAlumnoDTO dto) {
+        return ResponseEntity.ok(alumnoService.actualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        return alumnoRepository.findById(id).map(alumno -> {
-            alumno.setActivo(false);
-            alumnoRepository.save(alumno);
-            return ResponseEntity.ok().<Void>build();
-        }).orElse(ResponseEntity.notFound().build());
+        alumnoService.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
 }

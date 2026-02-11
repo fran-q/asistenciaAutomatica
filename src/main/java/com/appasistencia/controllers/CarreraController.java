@@ -1,9 +1,10 @@
 package com.appasistencia.controllers;
 
 import com.appasistencia.dtos.CarreraDTO;
-import com.appasistencia.models.Carrera;
-import com.appasistencia.repositories.CarreraRepository;
-import com.appasistencia.repositories.InstitucionRepository;
+import com.appasistencia.dtos.response.CarreraResponseDTO;
+import com.appasistencia.services.CarreraService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,63 +14,41 @@ import java.util.List;
 @RequestMapping("/api/carreras")
 public class CarreraController {
 
-    private final CarreraRepository carreraRepository;
-    private final InstitucionRepository institucionRepository;
+    private final CarreraService carreraService;
 
-    public CarreraController(CarreraRepository carreraRepository, InstitucionRepository institucionRepository) {
-        this.carreraRepository = carreraRepository;
-        this.institucionRepository = institucionRepository;
+    public CarreraController(CarreraService carreraService) {
+        this.carreraService = carreraService;
     }
 
     @GetMapping
-    public List<Carrera> listarTodas() {
-        return carreraRepository.findByActivoTrue();
+    public ResponseEntity<List<CarreraResponseDTO>> listarTodas() {
+        return ResponseEntity.ok(carreraService.listarTodas());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Carrera> obtenerPorId(@PathVariable Long id) {
-        return carreraRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<CarreraResponseDTO> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(carreraService.obtenerPorId(id));
     }
 
     @GetMapping("/institucion/{idInstitucion}")
-    public List<Carrera> listarPorInstitucion(@PathVariable Long idInstitucion) {
-        return carreraRepository.findByInstitucionIdInstitucionAndActivoTrue(idInstitucion);
+    public ResponseEntity<List<CarreraResponseDTO>> listarPorInstitucion(@PathVariable Long idInstitucion) {
+        return ResponseEntity.ok(carreraService.listarPorInstitucion(idInstitucion));
     }
 
     @PostMapping
-    public ResponseEntity<Carrera> crear(@RequestBody CarreraDTO dto) {
-        return institucionRepository.findById(dto.getIdInstitucion()).map(institucion -> {
-            Carrera carrera = new Carrera(
-                    dto.getNombre(), dto.getDescripcion(), dto.getDuracionAnios(),
-                    dto.getTitulo(), institucion
-            );
-            return ResponseEntity.ok(carreraRepository.save(carrera));
-        }).orElse(ResponseEntity.badRequest().build());
+    public ResponseEntity<CarreraResponseDTO> crear(@Valid @RequestBody CarreraDTO dto) {
+        CarreraResponseDTO creada = carreraService.crear(dto);
+        return new ResponseEntity<>(creada, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Carrera> actualizar(@PathVariable Long id, @RequestBody CarreraDTO dto) {
-        return carreraRepository.findById(id).map(carrera -> {
-            carrera.setNombre(dto.getNombre());
-            carrera.setDescripcion(dto.getDescripcion());
-            carrera.setDuracionAnios(dto.getDuracionAnios());
-            carrera.setTitulo(dto.getTitulo());
-            if (dto.getIdInstitucion() != null) {
-                institucionRepository.findById(dto.getIdInstitucion())
-                        .ifPresent(carrera::setInstitucion);
-            }
-            return ResponseEntity.ok(carreraRepository.save(carrera));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<CarreraResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody CarreraDTO dto) {
+        return ResponseEntity.ok(carreraService.actualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        return carreraRepository.findById(id).map(carrera -> {
-            carrera.setActivo(false);
-            carreraRepository.save(carrera);
-            return ResponseEntity.ok().<Void>build();
-        }).orElse(ResponseEntity.notFound().build());
+        carreraService.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
 }

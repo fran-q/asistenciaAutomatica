@@ -1,9 +1,10 @@
 package com.appasistencia.controllers;
 
 import com.appasistencia.dtos.MateriaDTO;
-import com.appasistencia.models.Materia;
-import com.appasistencia.repositories.CarreraRepository;
-import com.appasistencia.repositories.MateriaRepository;
+import com.appasistencia.dtos.response.MateriaResponseDTO;
+import com.appasistencia.services.MateriaService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,58 +14,41 @@ import java.util.List;
 @RequestMapping("/api/materias")
 public class MateriaController {
 
-    private final MateriaRepository materiaRepository;
-    private final CarreraRepository carreraRepository;
+    private final MateriaService materiaService;
 
-    public MateriaController(MateriaRepository materiaRepository, CarreraRepository carreraRepository) {
-        this.materiaRepository = materiaRepository;
-        this.carreraRepository = carreraRepository;
+    public MateriaController(MateriaService materiaService) {
+        this.materiaService = materiaService;
     }
 
     @GetMapping
-    public List<Materia> listarTodas() {
-        return materiaRepository.findByActivoTrue();
+    public ResponseEntity<List<MateriaResponseDTO>> listarTodas() {
+        return ResponseEntity.ok(materiaService.listarTodas());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Materia> obtenerPorId(@PathVariable Long id) {
-        return materiaRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<MateriaResponseDTO> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(materiaService.obtenerPorId(id));
     }
 
     @GetMapping("/carrera/{idCarrera}")
-    public List<Materia> listarPorCarrera(@PathVariable Long idCarrera) {
-        return materiaRepository.findByCarreraIdCarreraAndActivoTrue(idCarrera);
+    public ResponseEntity<List<MateriaResponseDTO>> listarPorCarrera(@PathVariable Long idCarrera) {
+        return ResponseEntity.ok(materiaService.listarPorCarrera(idCarrera));
     }
 
     @PostMapping
-    public ResponseEntity<Materia> crear(@RequestBody MateriaDTO dto) {
-        return carreraRepository.findById(dto.getIdCarrera()).map(carrera -> {
-            Materia materia = new Materia(dto.getNombre(), dto.getDescripcion(), dto.getHorasSemanales(), carrera);
-            return ResponseEntity.ok(materiaRepository.save(materia));
-        }).orElse(ResponseEntity.badRequest().build());
+    public ResponseEntity<MateriaResponseDTO> crear(@Valid @RequestBody MateriaDTO dto) {
+        MateriaResponseDTO creada = materiaService.crear(dto);
+        return new ResponseEntity<>(creada, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Materia> actualizar(@PathVariable Long id, @RequestBody MateriaDTO dto) {
-        return materiaRepository.findById(id).map(materia -> {
-            materia.setNombre(dto.getNombre());
-            materia.setDescripcion(dto.getDescripcion());
-            materia.setHorasSemanales(dto.getHorasSemanales());
-            if (dto.getIdCarrera() != null) {
-                carreraRepository.findById(dto.getIdCarrera()).ifPresent(materia::setCarrera);
-            }
-            return ResponseEntity.ok(materiaRepository.save(materia));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<MateriaResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody MateriaDTO dto) {
+        return ResponseEntity.ok(materiaService.actualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        return materiaRepository.findById(id).map(materia -> {
-            materia.setActivo(false);
-            materiaRepository.save(materia);
-            return ResponseEntity.ok().<Void>build();
-        }).orElse(ResponseEntity.notFound().build());
+        materiaService.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
 }

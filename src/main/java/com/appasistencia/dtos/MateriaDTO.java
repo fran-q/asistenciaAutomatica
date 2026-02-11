@@ -1,9 +1,25 @@
 package com.appasistencia.dtos;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 public class MateriaDTO {
+
+    @NotBlank(message = "El nombre de la materia es obligatorio")
+    @Size(min = 2, max = 200, message = "El nombre debe tener entre 2 y 200 caracteres")
     private String nombre;
+
+    @Size(max = 500, message = "La descripción no puede superar los 500 caracteres")
     private String descripcion;
+
+    @Min(value = 1, message = "Las horas semanales mínimas son 1")
+    @Max(value = 40, message = "Las horas semanales máximas son 40")
     private int horasSemanales;
+
+    @NotNull(message = "El ID de la carrera es obligatorio")
     private Long idCarrera;
 
     public MateriaDTO() {}

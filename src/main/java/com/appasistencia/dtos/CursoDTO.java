@@ -1,11 +1,33 @@
 package com.appasistencia.dtos;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 public class CursoDTO {
+
+    @NotBlank(message = "El nombre del curso es obligatorio")
+    @Size(min = 2, max = 200, message = "El nombre debe tener entre 2 y 200 caracteres")
     private String nombre;
+
+    @Min(value = 1, message = "El año de carrera mínimo es 1")
+    @Max(value = 10, message = "El año de carrera máximo es 10")
     private int anioCarrera;
+
+    @NotBlank(message = "La comisión es obligatoria")
+    @Size(max = 50, message = "La comisión no puede superar los 50 caracteres")
     private String comision;
+
+    @NotBlank(message = "El turno es obligatorio")
     private String turno;
+
+    @NotNull(message = "El ID de la carrera es obligatorio")
     private Long idCarrera;
+
+    @Min(value = 2000, message = "El año lectivo debe ser mayor o igual a 2000")
+    @Max(value = 2100, message = "El año lectivo debe ser menor o igual a 2100")
     private int anioLectivo;
 
     public CursoDTO() {}

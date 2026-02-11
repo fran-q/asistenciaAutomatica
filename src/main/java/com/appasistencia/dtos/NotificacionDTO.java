@@ -1,11 +1,27 @@
 package com.appasistencia.dtos;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 public class NotificacionDTO {
+
+    @NotNull(message = "El ID del alumno es obligatorio")
     private Long idAlumno;
+
     private Long idAsistencia;
+
     private Long idAsignacion;
+
+    @NotBlank(message = "El tipo de notificación es obligatorio")
     private String tipo;
+
+    @NotBlank(message = "El título es obligatorio")
+    @Size(min = 2, max = 200, message = "El título debe tener entre 2 y 200 caracteres")
     private String titulo;
+
+    @NotBlank(message = "El mensaje es obligatorio")
+    @Size(min = 2, max = 1000, message = "El mensaje debe tener entre 2 y 1000 caracteres")
     private String mensaje;
 
     public NotificacionDTO() {}

@@ -1,7 +1,13 @@
 package com.appasistencia.dtos;
 
+import jakarta.validation.constraints.NotNull;
+
 public class AsignacionDTO {
+
+    @NotNull(message = "El ID del profesor es obligatorio")
     private Long idProfesor;
+
+    @NotNull(message = "El ID de la relación curso-materia es obligatorio")
     private Long idCursoMateria;
 
     public AsignacionDTO() {}

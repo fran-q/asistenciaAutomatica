@@ -1,109 +1,69 @@
 package com.appasistencia.controllers;
 
 import com.appasistencia.dtos.AsistenciaDTO;
-import com.appasistencia.models.Asistencia;
-import com.appasistencia.models.EstadoAsistencia;
-import com.appasistencia.models.ModoRegistro;
-import com.appasistencia.repositories.AsignacionRepository;
-import com.appasistencia.repositories.AsistenciaRepository;
-import com.appasistencia.repositories.UsuarioProfesorRepository;
+import com.appasistencia.dtos.response.AsistenciaResponseDTO;
+import com.appasistencia.services.AsistenciaService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/asistencias")
 public class AsistenciaController {
 
-    private final AsistenciaRepository asistenciaRepository;
-    private final UsuarioProfesorRepository profesorRepository;
-    private final AsignacionRepository asignacionRepository;
+    private final AsistenciaService asistenciaService;
 
-    public AsistenciaController(AsistenciaRepository asistenciaRepository,
-                                 UsuarioProfesorRepository profesorRepository,
-                                 AsignacionRepository asignacionRepository) {
-        this.asistenciaRepository = asistenciaRepository;
-        this.profesorRepository = profesorRepository;
-        this.asignacionRepository = asignacionRepository;
+    public AsistenciaController(AsistenciaService asistenciaService) {
+        this.asistenciaService = asistenciaService;
     }
 
     @GetMapping
-    public List<Asistencia> listarTodas() {
-        return asistenciaRepository.findByActivoTrue();
+    public ResponseEntity<List<AsistenciaResponseDTO>> listarTodas() {
+        return ResponseEntity.ok(asistenciaService.listarTodas());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Asistencia> obtenerPorId(@PathVariable Long id) {
-        return asistenciaRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<AsistenciaResponseDTO> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(asistenciaService.obtenerPorId(id));
     }
 
     @GetMapping("/profesor/{idProfesor}")
-    public List<Asistencia> listarPorProfesor(@PathVariable Long idProfesor) {
-        return asistenciaRepository.findByProfesorIdProfesorAndActivoTrue(idProfesor);
+    public ResponseEntity<List<AsistenciaResponseDTO>> listarPorProfesor(@PathVariable Long idProfesor) {
+        return ResponseEntity.ok(asistenciaService.listarPorProfesor(idProfesor));
     }
 
     @GetMapping("/asignacion/{idAsignacion}")
-    public List<Asistencia> listarPorAsignacion(@PathVariable Long idAsignacion) {
-        return asistenciaRepository.findByAsignacionIdAsignacionAndActivoTrue(idAsignacion);
+    public ResponseEntity<List<AsistenciaResponseDTO>> listarPorAsignacion(@PathVariable Long idAsignacion) {
+        return ResponseEntity.ok(asistenciaService.listarPorAsignacion(idAsignacion));
     }
 
     @GetMapping("/fecha/{fecha}")
-    public List<Asistencia> listarPorFecha(@PathVariable String fecha) {
-        return asistenciaRepository.findByFechaAndActivoTrue(LocalDate.parse(fecha));
+    public ResponseEntity<List<AsistenciaResponseDTO>> listarPorFecha(@PathVariable String fecha) {
+        return ResponseEntity.ok(asistenciaService.listarPorFecha(fecha));
     }
 
     @GetMapping("/rango")
-    public List<Asistencia> listarPorRango(@RequestParam String desde, @RequestParam String hasta) {
-        return asistenciaRepository.findByFechaBetweenAndActivoTrue(
-                LocalDate.parse(desde), LocalDate.parse(hasta)
-        );
+    public ResponseEntity<List<AsistenciaResponseDTO>> listarPorRango(@RequestParam String desde, @RequestParam String hasta) {
+        return ResponseEntity.ok(asistenciaService.listarPorRango(desde, hasta));
     }
 
     @PostMapping
-    public ResponseEntity<Asistencia> crear(@RequestBody AsistenciaDTO dto) {
-        var profesorOpt = profesorRepository.findById(dto.getIdProfesor());
-        var asignacionOpt = asignacionRepository.findById(dto.getIdAsignacion());
-
-        if (profesorOpt.isPresent() && asignacionOpt.isPresent()) {
-            Asistencia asistencia = new Asistencia(
-                    profesorOpt.get(), asignacionOpt.get(),
-                    LocalDate.parse(dto.getFecha()),
-                    LocalTime.parse(dto.getHoraEntrada()),
-                    EstadoAsistencia.valueOf(dto.getEstado()),
-                    ModoRegistro.valueOf(dto.getModoRegistro())
-            );
-            if (dto.getHoraSalida() != null) asistencia.setHoraSalida(LocalTime.parse(dto.getHoraSalida()));
-            asistencia.setObservaciones(dto.getObservaciones());
-
-            return ResponseEntity.ok(asistenciaRepository.save(asistencia));
-        }
-        return ResponseEntity.badRequest().build();
+    public ResponseEntity<AsistenciaResponseDTO> crear(@Valid @RequestBody AsistenciaDTO dto) {
+        AsistenciaResponseDTO creada = asistenciaService.crear(dto);
+        return new ResponseEntity<>(creada, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Asistencia> actualizar(@PathVariable Long id, @RequestBody AsistenciaDTO dto) {
-        return asistenciaRepository.findById(id).map(asistencia -> {
-            if (dto.getFecha() != null) asistencia.setFecha(LocalDate.parse(dto.getFecha()));
-            if (dto.getHoraEntrada() != null) asistencia.setHoraEntrada(LocalTime.parse(dto.getHoraEntrada()));
-            if (dto.getHoraSalida() != null) asistencia.setHoraSalida(LocalTime.parse(dto.getHoraSalida()));
-            if (dto.getEstado() != null) asistencia.setEstado(EstadoAsistencia.valueOf(dto.getEstado()));
-            if (dto.getModoRegistro() != null) asistencia.setModoRegistro(ModoRegistro.valueOf(dto.getModoRegistro()));
-            asistencia.setObservaciones(dto.getObservaciones());
-            return ResponseEntity.ok(asistenciaRepository.save(asistencia));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<AsistenciaResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody AsistenciaDTO dto) {
+        return ResponseEntity.ok(asistenciaService.actualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        return asistenciaRepository.findById(id).map(asistencia -> {
-            asistencia.setActivo(false);
-            asistenciaRepository.save(asistencia);
-            return ResponseEntity.ok().<Void>build();
-        }).orElse(ResponseEntity.notFound().build());
+        asistenciaService.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
 }

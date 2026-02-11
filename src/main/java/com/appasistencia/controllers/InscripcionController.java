@@ -1,10 +1,10 @@
 package com.appasistencia.controllers;
 
 import com.appasistencia.dtos.InscripcionDTO;
-import com.appasistencia.models.Inscripcion;
-import com.appasistencia.repositories.CursoRepository;
-import com.appasistencia.repositories.InscripcionRepository;
-import com.appasistencia.repositories.UsuarioAlumnoRepository;
+import com.appasistencia.dtos.response.InscripcionResponseDTO;
+import com.appasistencia.services.InscripcionService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,57 +14,41 @@ import java.util.List;
 @RequestMapping("/api/inscripciones")
 public class InscripcionController {
 
-    private final InscripcionRepository inscripcionRepository;
-    private final UsuarioAlumnoRepository alumnoRepository;
-    private final CursoRepository cursoRepository;
+    private final InscripcionService inscripcionService;
 
-    public InscripcionController(InscripcionRepository inscripcionRepository,
-                                  UsuarioAlumnoRepository alumnoRepository, CursoRepository cursoRepository) {
-        this.inscripcionRepository = inscripcionRepository;
-        this.alumnoRepository = alumnoRepository;
-        this.cursoRepository = cursoRepository;
+    public InscripcionController(InscripcionService inscripcionService) {
+        this.inscripcionService = inscripcionService;
     }
 
     @GetMapping
-    public List<Inscripcion> listarTodas() {
-        return inscripcionRepository.findByActivoTrue();
+    public ResponseEntity<List<InscripcionResponseDTO>> listarTodas() {
+        return ResponseEntity.ok(inscripcionService.listarTodas());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Inscripcion> obtenerPorId(@PathVariable Long id) {
-        return inscripcionRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<InscripcionResponseDTO> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(inscripcionService.obtenerPorId(id));
     }
 
     @GetMapping("/alumno/{idAlumno}")
-    public List<Inscripcion> listarPorAlumno(@PathVariable Long idAlumno) {
-        return inscripcionRepository.findByAlumnoIdAlumnoAndActivoTrue(idAlumno);
+    public ResponseEntity<List<InscripcionResponseDTO>> listarPorAlumno(@PathVariable Long idAlumno) {
+        return ResponseEntity.ok(inscripcionService.listarPorAlumno(idAlumno));
     }
 
     @GetMapping("/curso/{idCurso}")
-    public List<Inscripcion> listarPorCurso(@PathVariable Long idCurso) {
-        return inscripcionRepository.findByCursoIdCursoAndActivoTrue(idCurso);
+    public ResponseEntity<List<InscripcionResponseDTO>> listarPorCurso(@PathVariable Long idCurso) {
+        return ResponseEntity.ok(inscripcionService.listarPorCurso(idCurso));
     }
 
     @PostMapping
-    public ResponseEntity<Inscripcion> crear(@RequestBody InscripcionDTO dto) {
-        var alumnoOpt = alumnoRepository.findById(dto.getIdAlumno());
-        var cursoOpt = cursoRepository.findById(dto.getIdCurso());
-
-        if (alumnoOpt.isPresent() && cursoOpt.isPresent()) {
-            Inscripcion inscripcion = new Inscripcion(alumnoOpt.get(), cursoOpt.get());
-            return ResponseEntity.ok(inscripcionRepository.save(inscripcion));
-        }
-        return ResponseEntity.badRequest().build();
+    public ResponseEntity<InscripcionResponseDTO> crear(@Valid @RequestBody InscripcionDTO dto) {
+        InscripcionResponseDTO creada = inscripcionService.crear(dto);
+        return new ResponseEntity<>(creada, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        return inscripcionRepository.findById(id).map(inscripcion -> {
-            inscripcion.setActivo(false);
-            inscripcionRepository.save(inscripcion);
-            return ResponseEntity.ok().<Void>build();
-        }).orElse(ResponseEntity.notFound().build());
+        inscripcionService.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -1,9 +1,20 @@
 package com.appasistencia.dtos;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class HorarioDTO {
+
+    @NotNull(message = "El ID de la asignación es obligatorio")
     private Long idAsignacion;
+
+    @NotBlank(message = "El día de la semana es obligatorio")
     private String diaSemana;
+
+    @NotBlank(message = "La hora de inicio es obligatoria")
     private String horaInicio;
+
+    @NotBlank(message = "La hora de fin es obligatoria")
     private String horaFin;
 
     public HorarioDTO() {}

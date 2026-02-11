@@ -1,9 +1,23 @@
 package com.appasistencia.dtos;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class InstitucionDTO {
+
+    @NotBlank(message = "El nombre de la institución es obligatorio")
+    @Size(min = 2, max = 200, message = "El nombre debe tener entre 2 y 200 caracteres")
     private String nombre;
+
+    @NotBlank(message = "La dirección es obligatoria")
+    @Size(max = 255, message = "La dirección no puede superar los 255 caracteres")
     private String direccion;
+
+    @Size(max = 20, message = "El teléfono no puede superar los 20 caracteres")
     private String telefono;
+
+    @Email(message = "El formato del email no es válido")
     private String email;
 
     public InstitucionDTO() {}

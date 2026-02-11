@@ -1,92 +1,54 @@
 package com.appasistencia.controllers;
 
 import com.appasistencia.dtos.UsuarioDTO;
-import com.appasistencia.models.*;
-import com.appasistencia.repositories.InstitucionRepository;
-import com.appasistencia.repositories.UsuarioRepository;
+import com.appasistencia.dtos.response.UsuarioResponseDTO;
+import com.appasistencia.services.UsuarioService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
 
-    private final UsuarioRepository usuarioRepository;
-    private final InstitucionRepository institucionRepository;
+    private final UsuarioService usuarioService;
 
-    public UsuarioController(UsuarioRepository usuarioRepository, InstitucionRepository institucionRepository) {
-        this.usuarioRepository = usuarioRepository;
-        this.institucionRepository = institucionRepository;
+    public UsuarioController(UsuarioService usuarioService) {
+        this.usuarioService = usuarioService;
     }
 
     @GetMapping
-    public List<Usuario> listarTodos() {
-        return usuarioRepository.findByActivoTrue();
+    public ResponseEntity<List<UsuarioResponseDTO>> listarTodos() {
+        return ResponseEntity.ok(usuarioService.listarTodos());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> obtenerPorId(@PathVariable Long id) {
-        return usuarioRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<UsuarioResponseDTO> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(usuarioService.obtenerPorId(id));
     }
 
     @GetMapping("/rol/{rol}")
-    public List<Usuario> listarPorRol(@PathVariable String rol) {
-        return usuarioRepository.findByRolAndActivoTrue(Rol.valueOf(rol.toUpperCase()));
+    public ResponseEntity<List<UsuarioResponseDTO>> listarPorRol(@PathVariable String rol) {
+        return ResponseEntity.ok(usuarioService.listarPorRol(rol));
     }
 
     @PostMapping
-    public ResponseEntity<Usuario> crear(@RequestBody UsuarioDTO dto) {
-        Usuario usuario = new Usuario(
-                dto.getNombre(), dto.getApellido(), dto.getEmail(), dto.getTelefono(),
-                dto.getDireccion(), TipoDocumento.valueOf(dto.getTipoDocumento()),
-                dto.getNumeroDocumento(), Genero.valueOf(dto.getGenero()),
-                dto.getContrasena(), Rol.valueOf(dto.getRol())
-        );
-        usuario.setFotoPerfil(dto.getFotoPerfil());
-
-        if (dto.getIdInstitucion() != null) {
-            institucionRepository.findById(dto.getIdInstitucion())
-                    .ifPresent(usuario::setInstitucion);
-        }
-
-        return ResponseEntity.ok(usuarioRepository.save(usuario));
+    public ResponseEntity<UsuarioResponseDTO> crear(@Valid @RequestBody UsuarioDTO dto) {
+        UsuarioResponseDTO creado = usuarioService.crear(dto);
+        return new ResponseEntity<>(creado, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> actualizar(@PathVariable Long id, @RequestBody UsuarioDTO dto) {
-        return usuarioRepository.findById(id).map(usuario -> {
-            usuario.setNombre(dto.getNombre());
-            usuario.setApellido(dto.getApellido());
-            usuario.setEmail(dto.getEmail());
-            usuario.setTelefono(dto.getTelefono());
-            usuario.setDireccion(dto.getDireccion());
-            if (dto.getTipoDocumento() != null) usuario.setTipoDocumento(TipoDocumento.valueOf(dto.getTipoDocumento()));
-            usuario.setNumeroDocumento(dto.getNumeroDocumento());
-            if (dto.getGenero() != null) usuario.setGenero(Genero.valueOf(dto.getGenero()));
-            if (dto.getContrasena() != null) usuario.setContrasena(dto.getContrasena());
-            if (dto.getRol() != null) usuario.setRol(Rol.valueOf(dto.getRol()));
-            usuario.setFotoPerfil(dto.getFotoPerfil());
-
-            if (dto.getIdInstitucion() != null) {
-                institucionRepository.findById(dto.getIdInstitucion())
-                        .ifPresent(usuario::setInstitucion);
-            }
-
-            return ResponseEntity.ok(usuarioRepository.save(usuario));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<UsuarioResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody UsuarioDTO dto) {
+        return ResponseEntity.ok(usuarioService.actualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        return usuarioRepository.findById(id).map(usuario -> {
-            usuario.setActivo(false);
-            usuarioRepository.save(usuario);
-            return ResponseEntity.ok().<Void>build();
-        }).orElse(ResponseEntity.notFound().build());
+        usuarioService.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
 }

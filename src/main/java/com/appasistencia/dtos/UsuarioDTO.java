@@ -1,17 +1,50 @@
 package com.appasistencia.dtos;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 public class UsuarioDTO {
+
+    @NotBlank(message = "El nombre es obligatorio")
+    @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
     private String nombre;
+
+    @NotBlank(message = "El apellido es obligatorio")
+    @Size(min = 2, max = 100, message = "El apellido debe tener entre 2 y 100 caracteres")
     private String apellido;
+
+    @NotBlank(message = "El email es obligatorio")
+    @Email(message = "El formato del email no es válido")
     private String email;
+
+    @Size(max = 20, message = "El teléfono no puede superar los 20 caracteres")
     private String telefono;
+
+    @Size(max = 255, message = "La dirección no puede superar los 255 caracteres")
     private String direccion;
+
+    @NotBlank(message = "El tipo de documento es obligatorio")
     private String tipoDocumento;
+
+    @NotBlank(message = "El número de documento es obligatorio")
+    @Size(min = 5, max = 20, message = "El número de documento debe tener entre 5 y 20 caracteres")
     private String numeroDocumento;
+
+    @NotBlank(message = "El género es obligatorio")
     private String genero;
+
+    @NotBlank(message = "La contraseña es obligatoria")
+    @Size(min = 6, max = 100, message = "La contraseña debe tener entre 6 y 100 caracteres")
     private String contrasena;
+
+    @NotBlank(message = "El rol es obligatorio")
     private String rol;
+
     private String fotoPerfil;
+
+    @NotNull(message = "El ID de la institución es obligatorio")
     private Long idInstitucion;
 
     public UsuarioDTO() {}

@@ -1,10 +1,10 @@
 package com.appasistencia.controllers;
 
 import com.appasistencia.dtos.AsignacionDTO;
-import com.appasistencia.models.Asignacion;
-import com.appasistencia.repositories.AsignacionRepository;
-import com.appasistencia.repositories.CursoMateriaRepository;
-import com.appasistencia.repositories.UsuarioProfesorRepository;
+import com.appasistencia.dtos.response.AsignacionResponseDTO;
+import com.appasistencia.services.AsignacionService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,53 +14,36 @@ import java.util.List;
 @RequestMapping("/api/asignaciones")
 public class AsignacionController {
 
-    private final AsignacionRepository asignacionRepository;
-    private final UsuarioProfesorRepository profesorRepository;
-    private final CursoMateriaRepository cursoMateriaRepository;
+    private final AsignacionService asignacionService;
 
-    public AsignacionController(AsignacionRepository asignacionRepository,
-                                 UsuarioProfesorRepository profesorRepository,
-                                 CursoMateriaRepository cursoMateriaRepository) {
-        this.asignacionRepository = asignacionRepository;
-        this.profesorRepository = profesorRepository;
-        this.cursoMateriaRepository = cursoMateriaRepository;
+    public AsignacionController(AsignacionService asignacionService) {
+        this.asignacionService = asignacionService;
     }
 
     @GetMapping
-    public List<Asignacion> listarTodas() {
-        return asignacionRepository.findByActivoTrue();
+    public ResponseEntity<List<AsignacionResponseDTO>> listarTodas() {
+        return ResponseEntity.ok(asignacionService.listarTodas());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Asignacion> obtenerPorId(@PathVariable Long id) {
-        return asignacionRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<AsignacionResponseDTO> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(asignacionService.obtenerPorId(id));
     }
 
     @GetMapping("/profesor/{idProfesor}")
-    public List<Asignacion> listarPorProfesor(@PathVariable Long idProfesor) {
-        return asignacionRepository.findByProfesorIdProfesorAndActivoTrue(idProfesor);
+    public ResponseEntity<List<AsignacionResponseDTO>> listarPorProfesor(@PathVariable Long idProfesor) {
+        return ResponseEntity.ok(asignacionService.listarPorProfesor(idProfesor));
     }
 
     @PostMapping
-    public ResponseEntity<Asignacion> crear(@RequestBody AsignacionDTO dto) {
-        var profesorOpt = profesorRepository.findById(dto.getIdProfesor());
-        var cmOpt = cursoMateriaRepository.findById(dto.getIdCursoMateria());
-
-        if (profesorOpt.isPresent() && cmOpt.isPresent()) {
-            Asignacion asignacion = new Asignacion(profesorOpt.get(), cmOpt.get());
-            return ResponseEntity.ok(asignacionRepository.save(asignacion));
-        }
-        return ResponseEntity.badRequest().build();
+    public ResponseEntity<AsignacionResponseDTO> crear(@Valid @RequestBody AsignacionDTO dto) {
+        AsignacionResponseDTO creada = asignacionService.crear(dto);
+        return new ResponseEntity<>(creada, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        return asignacionRepository.findById(id).map(asignacion -> {
-            asignacion.setActivo(false);
-            asignacionRepository.save(asignacion);
-            return ResponseEntity.ok().<Void>build();
-        }).orElse(ResponseEntity.notFound().build());
+        asignacionService.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -1,61 +1,49 @@
 package com.appasistencia.controllers;
 
 import com.appasistencia.dtos.InstitucionDTO;
-import com.appasistencia.models.Institucion;
-import com.appasistencia.repositories.InstitucionRepository;
+import com.appasistencia.dtos.response.InstitucionResponseDTO;
+import com.appasistencia.services.InstitucionService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/instituciones")
 public class InstitucionController {
 
-    private final InstitucionRepository institucionRepository;
+    private final InstitucionService institucionService;
 
-    public InstitucionController(InstitucionRepository institucionRepository) {
-        this.institucionRepository = institucionRepository;
+    public InstitucionController(InstitucionService institucionService) {
+        this.institucionService = institucionService;
     }
 
     @GetMapping
-    public List<Institucion> listarTodas() {
-        return institucionRepository.findByActivoTrue();
+    public ResponseEntity<List<InstitucionResponseDTO>> listarTodas() {
+        return ResponseEntity.ok(institucionService.listarTodas());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Institucion> obtenerPorId(@PathVariable Long id) {
-        return institucionRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<InstitucionResponseDTO> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(institucionService.obtenerPorId(id));
     }
 
     @PostMapping
-    public Institucion crear(@RequestBody InstitucionDTO dto) {
-        Institucion institucion = new Institucion(
-                dto.getNombre(), dto.getDireccion(), dto.getTelefono(), dto.getEmail()
-        );
-        return institucionRepository.save(institucion);
+    public ResponseEntity<InstitucionResponseDTO> crear(@Valid @RequestBody InstitucionDTO dto) {
+        InstitucionResponseDTO creada = institucionService.crear(dto);
+        return new ResponseEntity<>(creada, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Institucion> actualizar(@PathVariable Long id, @RequestBody InstitucionDTO dto) {
-        return institucionRepository.findById(id).map(institucion -> {
-            institucion.setNombre(dto.getNombre());
-            institucion.setDireccion(dto.getDireccion());
-            institucion.setTelefono(dto.getTelefono());
-            institucion.setEmail(dto.getEmail());
-            return ResponseEntity.ok(institucionRepository.save(institucion));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<InstitucionResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody InstitucionDTO dto) {
+        return ResponseEntity.ok(institucionService.actualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        return institucionRepository.findById(id).map(institucion -> {
-            institucion.setActivo(false);
-            institucionRepository.save(institucion);
-            return ResponseEntity.ok().<Void>build();
-        }).orElse(ResponseEntity.notFound().build());
+        institucionService.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
 }
