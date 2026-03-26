@@ -4,8 +4,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+// DTO de entrada: crear notificaciones para alumnos (inasistencias, alertas, etc.)
 public class NotificacionDTO {
 
+    // Relaciones (IDs) - asistencia y asignacion son opcionales segun el tipo
     @NotNull(message = "El ID del alumno es obligatorio")
     private Long idAlumno;
 
@@ -13,6 +15,7 @@ public class NotificacionDTO {
 
     private Long idAsignacion;
 
+    // Contenido de la notificacion
     @NotBlank(message = "El tipo de notificación es obligatorio")
     private String tipo;
 

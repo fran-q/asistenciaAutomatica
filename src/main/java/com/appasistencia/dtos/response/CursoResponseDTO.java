@@ -4,6 +4,7 @@ import com.appasistencia.models.Curso;
 import com.appasistencia.models.Turno;
 import java.time.LocalDateTime;
 
+// DTO de respuesta: datos de un curso (division de carrera en un anio lectivo)
 public class CursoResponseDTO {
 
     private Long idCurso;
@@ -11,13 +12,16 @@ public class CursoResponseDTO {
     private int anioCarrera;
     private String comision;
     private Turno turno;
+    // Relacion (ID plano)
     private Long idCarrera;
     private int anioLectivo;
+    // Campos de auditoria
     private LocalDateTime fechaCreacion;
     private boolean activo;
 
     public CursoResponseDTO() {}
 
+    // Conversion desde entidad - extrae idCarrera como ID plano
     public static CursoResponseDTO fromEntity(Curso curso) {
         CursoResponseDTO dto = new CursoResponseDTO();
         dto.idCurso = curso.getIdCurso();

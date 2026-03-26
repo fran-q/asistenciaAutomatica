@@ -1,7 +1,35 @@
 {
   "permissions": {
     "allow": [
-      "Bash(./gradlew compileJava:*)"
+      "Bash(./gradlew compileJava:*)",
+      "Bash(mvn compile:*)",
+      "Bash(./mvnw compile:*)",
+      "Bash(ls:*)",
+      "Bash(cmd.exe /c \"gradlew.bat compileJava 2>&1\")",
+      "Bash(cmd.exe /c \"cd /d C:\\\\Users\\\\Francisco\\\\Documents\\\\asistenciaAutomatica\\\\asistencia && gradlew.bat compileJava 2>&1\")",
+      "Bash(cmd.exe /c \"cd /d C:\\\\Users\\\\Francisco\\\\Documents\\\\asistenciaAutomatica\\\\asistencia && .\\\\gradlew.bat compileJava 2>&1\")",
+      "Bash(.\\\\gradlew.bat build:*)",
+      "Bash(cmd /c \"gradlew.bat build -x test\")",
+      "Bash(cmd /c \"cd /d C:\\\\Users\\\\Francisco\\\\Documents\\\\asistenciaAutomatica\\\\asistencia && gradlew.bat build -x test 2>&1\")",
+      "Bash(cmd /c \"cd /d C:\\\\Users\\\\Francisco\\\\Documents\\\\asistenciaAutomatica\\\\asistencia && gradlew build -x test\")",
+      "Bash(powershell -Command:*)",
+      "Bash(./gradlew build:*)",
+      "Bash(curl:*)",
+      "Bash(./gradlew bootRun:*)",
+      "Bash(git -C \"C:/Users/Francisco/Documents/asistenciaAutomatica/asistencia\" diff --stat HEAD)",
+      "Bash(done)",
+      "Bash(grep -l \"// Entidad:\\\\|// Servicio:\\\\|// Repositorio:\\\\|// DTO de\\\\|// Controlador\\\\|// Configuracion\\\\|// Excepcion\\\\|// Pagina:\\\\|// --- \" src/main/java/com/appasistencia/**/*.java src/main/resources/static/js/**/*.js)",
+      "Bash(xargs -I {} wc -l {})",
+      "Bash(grep -r \"CascadeType\\\\.\" /c/Users/Francisco/Documents/asistenciaAutomatica/asistencia/src/main/java/com/appasistencia/models/*.java)",
+      "Bash(grep -r \"orphanRemoval\" /c/Users/Francisco/Documents/asistenciaAutomatica/asistencia/src/main/java/com/appasistencia/models/*.java)",
+      "Bash(grep -n \"@PreAuthorize\\\\|@Secured\" /c/Users/Francisco/Documents/asistenciaAutomatica/asistencia/src/main/java/com/appasistencia/controllers/*.java)",
+      "Bash(cp src/main/java/com/appasistencia/AsistenciaApplication.java src/main/java/com/appasistencia/AsistenciaApplication.java.bak)",
+      "Bash(sed -i 's|^\\\\t// ||' src/main/java/com/appasistencia/AsistenciaApplication.java)",
+      "Bash(cp src/main/java/com/appasistencia/AsistenciaApplication.java.bak src/main/java/com/appasistencia/AsistenciaApplication.java)",
+      "Bash(rm src/main/java/com/appasistencia/AsistenciaApplication.java.bak)",
+      "Bash(find /c/Users/Francisco/Documents/asistenciaAutomatica/asistencia/src/main/java -type f -name *onfig*.java)",
+      "Bash(.mvnw.cmd compile:*)",
+      "Bash(cmd.exe /c \".\\\\gradlew.bat compileJava 2>&1\")"
     ]
   }
 }

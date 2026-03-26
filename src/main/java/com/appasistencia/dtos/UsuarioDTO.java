@@ -3,40 +3,51 @@ package com.appasistencia.dtos;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+// DTO de entrada: crear/editar usuarios del sistema (base para todos los roles)
 public class UsuarioDTO {
 
+    // Datos personales
     @NotBlank(message = "El nombre es obligatorio")
-    @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
+    @Size(min = 2, max = 50, message = "El nombre debe tener entre 2 y 50 caracteres")
+    @Pattern(regexp = "^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ'\\- ]+$", message = "El nombre solo puede contener letras, espacios, guiones y apóstrofes")
     private String nombre;
 
     @NotBlank(message = "El apellido es obligatorio")
-    @Size(min = 2, max = 100, message = "El apellido debe tener entre 2 y 100 caracteres")
+    @Size(min = 2, max = 64, message = "El apellido debe tener entre 2 y 64 caracteres")
+    @Pattern(regexp = "^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ'\\- ]+$", message = "El apellido solo puede contener letras, espacios, guiones y apóstrofes")
     private String apellido;
 
+    // Contacto
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "El formato del email no es válido")
+    @Size(max = 254, message = "El email no puede superar los 254 caracteres")
     private String email;
 
     @Size(max = 20, message = "El teléfono no puede superar los 20 caracteres")
+    @Pattern(regexp = "^$|^\\d{10}$", message = "El teléfono debe tener exactamente 10 dígitos (sin 0 ni 15)")
     private String telefono;
 
     @Size(max = 255, message = "La dirección no puede superar los 255 caracteres")
     private String direccion;
 
+    // Documentacion e identidad
     @NotBlank(message = "El tipo de documento es obligatorio")
     private String tipoDocumento;
 
     @NotBlank(message = "El número de documento es obligatorio")
-    @Size(min = 5, max = 20, message = "El número de documento debe tener entre 5 y 20 caracteres")
+    @Size(min = 6, max = 20, message = "El número de documento debe tener entre 6 y 20 caracteres")
     private String numeroDocumento;
 
     @NotBlank(message = "El género es obligatorio")
     private String genero;
 
-    @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 6, max = 100, message = "La contraseña debe tener entre 6 y 100 caracteres")
+    // Seguridad y acceso
+    @Size(min = 8, max = 64, message = "La contraseña debe tener entre 8 y 64 caracteres")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#+\\-_.])[A-Za-z\\d@$!%*?&#+\\-_.]{8,64}$",
+             message = "La contraseña debe contener al menos: 1 mayúscula, 1 minúscula, 1 número y 1 carácter especial (@$!%*?&#+-_.)")
     private String contrasena;
 
     @NotBlank(message = "El rol es obligatorio")
@@ -44,7 +55,7 @@ public class UsuarioDTO {
 
     private String fotoPerfil;
 
-    @NotNull(message = "El ID de la institución es obligatorio")
+    // Relacion (ID)
     private Long idInstitucion;
 
     public UsuarioDTO() {}

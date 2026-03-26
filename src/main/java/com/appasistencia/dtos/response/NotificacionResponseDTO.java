@@ -4,20 +4,25 @@ import com.appasistencia.models.Notificacion;
 import com.appasistencia.models.TipoNotificacion;
 import java.time.LocalDateTime;
 
+// DTO de respuesta: notificacion enviada a un alumno
 public class NotificacionResponseDTO {
 
     private Long idNotificacion;
+    // Relaciones (IDs planos) - asistencia y asignacion pueden ser null
     private Long idAlumno;
     private Long idAsistencia;
     private Long idAsignacion;
+    // Contenido
     private TipoNotificacion tipo;
     private String titulo;
     private String mensaje;
+    // Campos de auditoria
     private LocalDateTime fechaCreacion;
     private boolean activo;
 
     public NotificacionResponseDTO() {}
 
+    // Conversion desde entidad - extrae IDs planos de alumno, asistencia y asignacion
     public static NotificacionResponseDTO fromEntity(Notificacion notificacion) {
         NotificacionResponseDTO dto = new NotificacionResponseDTO();
         dto.idNotificacion = notificacion.getIdNotificacion();

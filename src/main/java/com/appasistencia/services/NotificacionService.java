@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// Servicio: logica de negocio para notificaciones
 @Service
 @Transactional
 public class NotificacionService {
@@ -59,6 +60,7 @@ public class NotificacionService {
                 .collect(Collectors.toList());
     }
 
+    // Crear validando tipo de notificacion y vinculando asistencia/asignacion opcionales
     public NotificacionResponseDTO crear(NotificacionDTO dto) {
         UsuarioAlumno alumno = alumnoRepository.findById(dto.getIdAlumno())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Alumno", dto.getIdAlumno()));
@@ -89,6 +91,7 @@ public class NotificacionService {
         return NotificacionResponseDTO.fromEntity(notificacionRepository.save(notificacion));
     }
 
+    // Eliminar (borrado logico)
     public void eliminar(Long id) {
         Notificacion notificacion = buscarPorId(id);
         notificacion.setActivo(false);

@@ -1,14 +1,40 @@
-// Generic CRUD page builder
-function createCrudPage({ title, icon, endpoint, columns, formFields, formToDto, mapRow, searchFilter }) {
+// --- Generador generico de paginas CRUD ---
+// Recibe config (titulo, endpoint, columnas, campos) y genera tabla+busqueda+paginacion+formulario
+// searchFields: [{ key, label, getValue }] - primer elemento es filtro por defecto, "Inactivos" se agrega auto
+// requiredDeps: [{ check, message }] - dependencias requeridas antes de crear un registro
+function createCrudPage({ title, icon, endpoint, columns, formFields, formToDto, mapRow, searchFields, noEdit, noCreate, noDelete, requiredDeps }) {
 
+    let currentFilter = 0; // Indice del filtro de busqueda activo
+    let showInactivos = false;
+
+    // --- Construccion del HTML de busqueda y filtros ---
     function buildSearchHtml() {
+        const filterItems = (searchFields || []).map((f, i) =>
+            `<button data-filter="${i}" class="${i === 0 ? 'active' : ''}">${f.label}</button>`
+        ).join('');
+        const defaultLabel = searchFields?.[0]?.label || 'Nombre';
+
         return `
-            <div class="table-search">
-                <i class="bi bi-search"></i>
-                <input type="text" id="crud-search" placeholder="Buscar...">
+            <div class="search-group">
+                <div class="table-search">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="crud-search" placeholder="Buscar por ${defaultLabel.toLowerCase()}...">
+                </div>
+                ${searchFields && searchFields.length > 0 ? `
+                <div class="filter-dropdown">
+                    <button class="filter-dropdown-btn" id="filter-btn">
+                        <i class="bi bi-funnel"></i> <span id="filter-label">${defaultLabel}</span> <i class="bi bi-chevron-down" style="font-size:0.65rem;"></i>
+                    </button>
+                    <div class="filter-dropdown-menu" id="filter-menu">
+                        ${filterItems}
+                        <div class="filter-divider"></div>
+                        <button data-filter="inactivos">Inactivos</button>
+                    </div>
+                </div>` : ''}
             </div>`;
     }
 
+    // --- Construccion del HTML del formulario (crear/editar) ---
     function buildFormHtml(data) {
         return formFields.map(f => {
             const val = data ? (data[f.key] ?? '') : (f.default ?? '');
@@ -36,16 +62,17 @@ function createCrudPage({ title, icon, endpoint, columns, formFields, formToDto,
             if (f.type === 'textarea') {
                 return `<div class="form-group">
                     <label>${f.label}</label>
-                    <textarea class="form-control" id="field-${f.key}" rows="3">${val}</textarea>
+                    <textarea class="form-control" id="field-${f.key}" rows="3" ${f.maxlength ? `maxlength="${f.maxlength}"` : ''}>${val}</textarea>
                 </div>`;
             }
             return `<div class="form-group">
                 <label>${f.label}</label>
-                <input type="${f.type || 'text'}" class="form-control" id="field-${f.key}" value="${val}" ${f.placeholder ? `placeholder="${f.placeholder}"` : ''}>
+                <input type="${f.type || 'text'}" class="form-control" id="field-${f.key}" value="${val}" ${f.placeholder ? `placeholder="${f.placeholder}"` : ''} ${f.maxlength ? `maxlength="${f.maxlength}"` : ''}>
             </div>`;
         }).join('');
     }
 
+    // Recolecta valores del formulario y aplica formToDto si existe
     function getFormValues() {
         const data = {};
         formFields.forEach(f => {
@@ -56,39 +83,104 @@ function createCrudPage({ title, icon, endpoint, columns, formFields, formToDto,
         return formToDto ? formToDto(data) : data;
     }
 
-    let allData = [];
+    // Verifica dependencias requeridas antes de abrir formulario de creacion
+    async function checkDeps() {
+        if (!requiredDeps || requiredDeps.length === 0) return true;
+        for (const dep of requiredDeps) {
+            const ok = await dep.check();
+            if (!ok) {
+                UI.toast(dep.message, 'warning');
+                return false;
+            }
+        }
+        return true;
+    }
 
+    // Columnas visibles (se oculta la columna ID)
+    const displayColumns = columns.filter(c => c.label !== 'ID');
+    const idKey = columns[0]?.idKey || 'id';
+
+    let allData = []; // Datos cargados del endpoint
+
+    // --- Render: construye estructura de pagina (header, tabla, toolbar) ---
     async function render() {
+        currentFilter = 0;
+        showInactivos = false;
+
         const content = document.getElementById('page-content');
         content.innerHTML = `
             <div class="page-header">
                 <h2 class="page-title"><i class="bi ${icon}"></i> ${title}</h2>
-                <button class="btn btn-primary" id="btn-new"><i class="bi bi-plus-lg"></i> Nuevo</button>
+                ${!noCreate ? '<button class="btn btn-primary" id="btn-new"><i class="bi bi-plus-lg"></i> Nuevo</button>' : ''}
             </div>
             <div class="table-wrapper">
                 <div class="table-toolbar">
                     ${buildSearchHtml()}
                     <span class="table-count" id="table-count"></span>
                 </div>
-                <table>
-                    <thead>
-                        <tr>
-                            ${columns.map(c => `<th>${c.label}</th>`).join('')}
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body">
-                        <tr><td colspan="${columns.length + 1}" class="table-empty">Cargando...</td></tr>
-                    </tbody>
-                </table>
+                <div class="table-scroll-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                ${displayColumns.map(c => `<th${c.width ? ` class="${c.width}"` : ''}>${c.label}</th>`).join('')}
+                                <th class="col-actions">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <tr><td colspan="${displayColumns.length + 1}" class="table-empty">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>`;
 
-        document.getElementById('btn-new').addEventListener('click', () => openForm(null));
+        if (!noCreate) {
+            document.getElementById('btn-new')?.addEventListener('click', async () => {
+                if (await checkDeps()) openForm(null);
+            });
+        }
         document.getElementById('crud-search').addEventListener('input', (e) => renderTable(e.target.value));
+
+        // --- Logica del dropdown de filtros ---
+        const filterBtn = document.getElementById('filter-btn');
+        const filterMenu = document.getElementById('filter-menu');
+        if (filterBtn && filterMenu) {
+            filterBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                filterMenu.classList.toggle('open');
+            });
+            document.addEventListener('click', () => filterMenu.classList.remove('open'));
+
+            filterMenu.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const filterVal = btn.dataset.filter;
+                    if (filterVal === 'inactivos') {
+                        showInactivos = !showInactivos;
+                        btn.classList.toggle('active', showInactivos);
+                    } else {
+                        const idx = parseInt(filterVal);
+                        currentFilter = idx;
+                        // Reset inactivos toggle when selecting a normal filter
+                        showInactivos = false;
+                        const inactivosBtn = filterMenu.querySelector('[data-filter="inactivos"]');
+                        if (inactivosBtn) inactivosBtn.classList.remove('active');
+                        // Update active state for non-inactivos buttons
+                        filterMenu.querySelectorAll('button:not([data-filter="inactivos"])').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        // Update label and placeholder
+                        const label = searchFields[idx].label;
+                        document.getElementById('filter-label').textContent = label;
+                        document.getElementById('crud-search').placeholder = `Buscar por ${label.toLowerCase()}...`;
+                    }
+                    filterMenu.classList.remove('open');
+                    renderTable(document.getElementById('crud-search').value);
+                });
+            });
+        }
 
         await loadData();
     }
 
+    // --- Carga de datos desde el endpoint ---
     async function loadData() {
         try {
             allData = await Api.get(endpoint);
@@ -98,36 +190,57 @@ function createCrudPage({ title, icon, endpoint, columns, formFields, formToDto,
         }
     }
 
+    // --- Renderizado de tabla con filtrado y busqueda ---
     function renderTable(search) {
         const tbody = document.getElementById('table-body');
         let filtered = allData;
-        if (search && searchFilter) {
+
+        // Filtrar por activos/inactivos
+        if (!showInactivos) {
+            filtered = filtered.filter(item => item.activo !== false);
+        } else {
+            filtered = filtered.filter(item => item.activo === false);
+        }
+
+        // Busqueda de texto segun el campo de filtro seleccionado
+        if (search && searchFields && searchFields.length > 0) {
             const s = search.toLowerCase();
-            filtered = allData.filter(item => searchFilter(item, s));
+            const field = searchFields[currentFilter];
+            filtered = filtered.filter(item => {
+                const val = field.getValue(item);
+                return val && val.toLowerCase().includes(s);
+            });
         }
 
         document.getElementById('table-count').textContent = `${filtered.length} registro(s)`;
 
         if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${columns.length + 1}" class="table-empty">No se encontraron registros</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${displayColumns.length + 1}" class="table-empty">No se encontraron registros</td></tr>`;
             return;
         }
 
+        // Generar filas con botones de editar/eliminar/reactivar
         tbody.innerHTML = filtered.map(item => {
             const row = mapRow(item);
+            const displayRow = row.slice(1);
+            const isInactive = item.activo === false;
             return `<tr>
-                ${row.map(cell => `<td>${cell}</td>`).join('')}
+                ${displayRow.map(cell => `<td>${cell}</td>`).join('')}
                 <td class="table-actions">
-                    <button class="btn-icon edit" title="Editar" data-id="${item[columns[0]?.idKey || 'id']}"><i class="bi bi-pencil"></i></button>
-                    <button class="btn-icon delete" title="Eliminar" data-id="${item[columns[0]?.idKey || 'id']}"><i class="bi bi-trash"></i></button>
+                    ${!noEdit && !isInactive ? `<button class="btn-icon edit" title="Editar" data-id="${item[idKey]}"><i class="bi bi-pencil"></i></button>` : ''}
+                    ${!noDelete ? (isInactive
+                        ? `<button class="btn-icon reactivate" title="Reactivar" data-id="${item[idKey]}"><i class="bi bi-arrow-counterclockwise"></i></button>`
+                        : `<button class="btn-icon delete" title="Eliminar" data-id="${item[idKey]}"><i class="bi bi-trash"></i></button>`
+                    ) : ''}
                 </td>
             </tr>`;
         }).join('');
 
+        // --- Listeners de acciones: editar, eliminar, reactivar ---
         tbody.querySelectorAll('.edit').forEach(btn =>
             btn.addEventListener('click', () => {
                 const id = btn.dataset.id;
-                const item = allData.find(d => String(d[columns[0]?.idKey || 'id']) === id);
+                const item = allData.find(d => String(d[idKey]) === id);
                 if (item) openForm(item);
             })
         );
@@ -146,12 +259,27 @@ function createCrudPage({ title, icon, endpoint, columns, formFields, formToDto,
                 });
             })
         );
+
+        tbody.querySelectorAll('.reactivate').forEach(btn =>
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.id;
+                UI.confirm('Reactivar este registro?', async () => {
+                    try {
+                        await Api.patch(`${endpoint}/${id}/reactivar`);
+                        UI.toast('Registro reactivado', 'success');
+                        await loadData();
+                    } catch (err) {
+                        UI.toast(err.mensaje || 'Error al reactivar', 'error');
+                    }
+                });
+            })
+        );
     }
 
+    // --- Apertura de formulario en modal (crear o editar) ---
     function openForm(item) {
         const isEdit = !!item;
         const html = buildFormHtml(item);
-        const idKey = columns[0]?.idKey || 'id';
 
         UI.openModal(isEdit ? `Editar ${title}` : `Nuevo ${title}`, html, async () => {
             const dto = getFormValues();

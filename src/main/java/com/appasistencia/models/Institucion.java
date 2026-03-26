@@ -6,32 +6,36 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+// Entidad: Institucion educativa que agrupa carreras y usuarios
 @Entity
 @Table(name = "institucion")
 public class Institucion {
 
-    //Atributos
+    // Identificador
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_institucion")
     private Long idInstitucion;
 
+    // Datos de contacto
     private String nombre;
     private String direccion;
     private String telefono;
     private String email;
 
+    // Auditoria
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
     private boolean activo = true;
 
+    // Relaciones: carreras y usuarios pertenecientes a esta institucion
     @JsonIgnore
-    @OneToMany(mappedBy = "institucion", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "institucion", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Carrera> carreras = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "institucion", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "institucion", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Usuario> usuarios = new ArrayList<>();
 
     //Constructores

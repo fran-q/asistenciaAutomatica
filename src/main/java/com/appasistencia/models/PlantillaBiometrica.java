@@ -3,20 +3,23 @@ package com.appasistencia.models;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+// Entidad: Plantilla biometrica facial para reconocimiento de un usuario
 @Entity
 @Table(name = "plantilla_biometrica")
 public class PlantillaBiometrica {
 
-    //Atributos
+    // Identificador
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_plantilla_biometrica")
     private Long idPlantillaBiometrica;
 
+    // Usuario al que pertenece esta plantilla
     @ManyToOne
     @JoinColumn(name = "fk_id_usuario")
     private Usuario usuario;
 
+    // Datos biometricos: modelo facial serializado y cantidad de muestras usadas
     @Lob
     @Column(name = "modelo_facial", columnDefinition = "LONGBLOB")
     private byte[] modeloFacial;
@@ -24,6 +27,7 @@ public class PlantillaBiometrica {
     @Column(name = "cantidad_muestras")
     private int cantidadMuestras;
 
+    // Auditoria
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 

@@ -4,20 +4,23 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+// Entidad: Horario semanal de una asignacion (dia + rango horario)
 @Entity
 @Table(name = "horario")
 public class Horario {
 
-    //Atributos
+    // Identificador
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_horario")
     private Long idHorario;
 
+    // Asignacion a la que pertenece este horario
     @ManyToOne
     @JoinColumn(name = "fk_id_asignacion")
     private Asignacion asignacion;
 
+    // Datos del horario
     @Enumerated(EnumType.STRING)
     @Column(name = "dia_semana")
     private DiaSemana diaSemana;
@@ -28,6 +31,7 @@ public class Horario {
     @Column(name = "hora_fin")
     private LocalTime horaFin;
 
+    // Auditoria
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 

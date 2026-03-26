@@ -3,16 +3,18 @@ package com.appasistencia.models;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+// Entidad: Notificacion enviada a un alumno sobre asistencia o eventos
 @Entity
 @Table(name = "notificacion")
 public class Notificacion {
 
-    //Atributos
+    // Identificador
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_notificacion")
     private Long idNotificacion;
 
+    // Relaciones: alumno destinatario, asistencia y asignacion asociadas
     @ManyToOne
     @JoinColumn(name = "fk_id_alumno")
     private UsuarioAlumno alumno;
@@ -25,6 +27,7 @@ public class Notificacion {
     @JoinColumn(name = "fk_id_asignacion")
     private Asignacion asignacion;
 
+    // Contenido de la notificacion
     @Enumerated(EnumType.STRING)
     private TipoNotificacion tipo;
 
@@ -33,6 +36,7 @@ public class Notificacion {
     @Column(columnDefinition = "TEXT")
     private String mensaje;
 
+    // Auditoria
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 

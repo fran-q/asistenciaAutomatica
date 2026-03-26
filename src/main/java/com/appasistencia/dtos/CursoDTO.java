@@ -6,8 +6,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+// DTO de entrada: crear/editar cursos (division concreta de una carrera en un anio lectivo)
 public class CursoDTO {
 
+    // Datos del curso
     @NotBlank(message = "El nombre del curso es obligatorio")
     @Size(min = 2, max = 200, message = "El nombre debe tener entre 2 y 200 caracteres")
     private String nombre;
@@ -23,9 +25,11 @@ public class CursoDTO {
     @NotBlank(message = "El turno es obligatorio")
     private String turno;
 
+    // Relacion (ID)
     @NotNull(message = "El ID de la carrera es obligatorio")
     private Long idCarrera;
 
+    // Periodo lectivo
     @Min(value = 2000, message = "El año lectivo debe ser mayor o igual a 2000")
     @Max(value = 2100, message = "El año lectivo debe ser menor o igual a 2100")
     private int anioLectivo;

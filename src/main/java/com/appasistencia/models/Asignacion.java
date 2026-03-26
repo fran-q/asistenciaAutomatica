@@ -6,16 +6,18 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+// Entidad: Asignacion de un profesor a una curso-materia
 @Entity
 @Table(name = "asignacion")
 public class Asignacion {
 
-    //Atributos
+    // Identificador
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_asignacion")
     private Long idAsignacion;
 
+    // Relaciones: profesor asignado y curso-materia destino
     @ManyToOne
     @JoinColumn(name = "fk_id_profesor")
     private UsuarioProfesor profesor;
@@ -24,21 +26,23 @@ public class Asignacion {
     @JoinColumn(name = "fk_id_curso_materia")
     private CursoMateria cursoMateria;
 
+    // Auditoria
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
     private boolean activo = true;
 
+    // Relaciones derivadas: horarios, asistencias y notificaciones
     @JsonIgnore
-    @OneToMany(mappedBy = "asignacion", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "asignacion", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Horario> horarios = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "asignacion", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "asignacion", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Asistencia> asistencias = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "asignacion", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "asignacion", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Notificacion> notificaciones = new ArrayList<>();
 
     //Constructores

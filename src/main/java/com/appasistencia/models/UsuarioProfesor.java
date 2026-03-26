@@ -6,37 +6,42 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+// Entidad: Perfil de profesor vinculado a un Usuario
 @Entity
-@Table(name = "usuario_profesor")
+@Table(name = "usuario_profesor", uniqueConstraints = @UniqueConstraint(columnNames = "legajo"))
 public class UsuarioProfesor {
 
-    //Atributos
+    // Identificador
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_profesor")
     private Long idProfesor;
 
+    // Vinculo con el usuario base (relacion 1:1)
     @OneToOne
     @JoinColumn(name = "fk_id_usuario", unique = true)
     private Usuario usuario;
 
+    // Datos academicos del profesor
     private String legajo;
     private String titulo;
 
     @Enumerated(EnumType.STRING)
     private CategoriaProfesor categoria;
 
+    // Auditoria
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
     private boolean activo = true;
 
+    // Relaciones: asignaciones a curso-materias y registros de asistencia
     @JsonIgnore
-    @OneToMany(mappedBy = "profesor", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "profesor", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Asignacion> asignaciones = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "profesor", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "profesor", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Asistencia> asistencias = new ArrayList<>();
 
     //Constructores

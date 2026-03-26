@@ -4,18 +4,23 @@ import com.appasistencia.models.CategoriaProfesor;
 import com.appasistencia.models.UsuarioProfesor;
 import java.time.LocalDateTime;
 
+// DTO de respuesta: perfil de profesor (vinculado a un usuario via idUsuario)
 public class UsuarioProfesorResponseDTO {
 
     private Long idProfesor;
+    // Relacion (ID plano) - referencia al usuario base
     private Long idUsuario;
+    // Datos academicos
     private String legajo;
     private String titulo;
     private CategoriaProfesor categoria;
+    // Campos de auditoria
     private LocalDateTime fechaCreacion;
     private boolean activo;
 
     public UsuarioProfesorResponseDTO() {}
 
+    // Conversion desde entidad - extrae idUsuario como ID plano
     public static UsuarioProfesorResponseDTO fromEntity(UsuarioProfesor profesor) {
         UsuarioProfesorResponseDTO dto = new UsuarioProfesorResponseDTO();
         dto.idProfesor = profesor.getIdProfesor();

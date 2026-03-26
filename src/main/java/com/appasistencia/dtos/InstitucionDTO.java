@@ -4,8 +4,10 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+// DTO de entrada: crear/editar instituciones educativas
 public class InstitucionDTO {
 
+    // Datos de la institucion
     @NotBlank(message = "El nombre de la institución es obligatorio")
     @Size(min = 2, max = 200, message = "El nombre debe tener entre 2 y 200 caracteres")
     private String nombre;
@@ -14,6 +16,7 @@ public class InstitucionDTO {
     @Size(max = 255, message = "La dirección no puede superar los 255 caracteres")
     private String direccion;
 
+    // Datos de contacto (opcionales)
     @Size(max = 20, message = "El teléfono no puede superar los 20 caracteres")
     private String telefono;
 

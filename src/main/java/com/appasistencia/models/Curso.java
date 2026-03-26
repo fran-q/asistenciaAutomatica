@@ -6,16 +6,18 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+// Entidad: Curso (anio + comision + turno) de una carrera en un anio lectivo
 @Entity
 @Table(name = "curso")
 public class Curso {
 
-    //Atributos
+    // Identificador
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_curso")
     private Long idCurso;
 
+    // Datos del curso
     private String nombre;
 
     @Column(name = "anio_carrera")
@@ -26,10 +28,12 @@ public class Curso {
     @Enumerated(EnumType.STRING)
     private Turno turno;
 
+    // Carrera a la que pertenece
     @ManyToOne
     @JoinColumn(name = "fk_id_carrera")
     private Carrera carrera;
 
+    // Auditoria y periodo
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
@@ -38,12 +42,13 @@ public class Curso {
 
     private boolean activo = true;
 
+    // Relaciones: materias asignadas e inscripciones de alumnos
     @JsonIgnore
-    @OneToMany(mappedBy = "curso", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "curso", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<CursoMateria> cursoMaterias = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "curso", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "curso", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Inscripcion> inscripciones = new ArrayList<>();
 
     //Constructores

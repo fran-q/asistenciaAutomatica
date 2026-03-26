@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// Servicio: logica de negocio para cursos
 @Service
 @Transactional
 public class CursoService {
@@ -27,9 +28,17 @@ public class CursoService {
         this.carreraRepository = carreraRepository;
     }
 
+    // Listado (todos o filtrados por institucion)
     @Transactional(readOnly = true)
     public List<CursoResponseDTO> listarTodos() {
-        return cursoRepository.findByActivoTrue().stream()
+        return cursoRepository.findAll().stream()
+                .map(CursoResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CursoResponseDTO> listarTodos(Long idInstitucion) {
+        return cursoRepository.findByInstitucion(idInstitucion).stream()
                 .map(CursoResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -45,6 +54,7 @@ public class CursoService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Curso", id));
     }
 
+    // Filtrado por carrera (solo activos)
     @Transactional(readOnly = true)
     public List<CursoResponseDTO> listarPorCarrera(Long idCarrera) {
         return cursoRepository.findByCarreraIdCarreraAndActivoTrue(idCarrera).stream()
@@ -52,6 +62,7 @@ public class CursoService {
                 .collect(Collectors.toList());
     }
 
+    // CRUD - valida existencia de carrera y enum Turno
     public CursoResponseDTO crear(CursoDTO dto) {
         Carrera carrera = carreraRepository.findById(dto.getIdCarrera())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Carrera", dto.getIdCarrera()));
@@ -90,9 +101,55 @@ public class CursoService {
         return CursoResponseDTO.fromEntity(cursoRepository.save(curso));
     }
 
+    // Baja logica y reactivacion
     public void eliminar(Long id) {
         Curso curso = buscarPorId(id);
         curso.setActivo(false);
         cursoRepository.save(curso);
+    }
+
+    public void reactivar(Long id) {
+        Curso curso = buscarPorId(id);
+        curso.setActivo(true);
+        cursoRepository.save(curso);
+    }
+
+    // === Metodos con validacion de institucion ===
+    // Estos metodos verifican que el recurso pertenezca a la institucion del usuario autenticado
+
+    // Verifica que el recurso pertenezca a la institucion del usuario autenticado
+    private void verificarInstitucion(Long idInstitucionRecurso, Long idInstitucionUsuario) {
+        if (!idInstitucionRecurso.equals(idInstitucionUsuario)) {
+            throw new RecursoNoEncontradoException("Curso", 0L);
+        }
+    }
+
+    // Obtener curso por ID validando que pertenece a la misma institucion
+    @Transactional(readOnly = true)
+    public CursoResponseDTO obtenerPorId(Long id, Long idInstitucion) {
+        Curso curso = buscarPorId(id);
+        verificarInstitucion(curso.getCarrera().getInstitucion().getIdInstitucion(), idInstitucion);
+        return CursoResponseDTO.fromEntity(curso);
+    }
+
+    // Actualizar curso validando que pertenece a la misma institucion
+    public CursoResponseDTO actualizar(Long id, CursoDTO dto, Long idInstitucion) {
+        Curso curso = buscarPorId(id);
+        verificarInstitucion(curso.getCarrera().getInstitucion().getIdInstitucion(), idInstitucion);
+        return actualizar(id, dto);
+    }
+
+    // Eliminar curso validando que pertenece a la misma institucion
+    public void eliminar(Long id, Long idInstitucion) {
+        Curso curso = buscarPorId(id);
+        verificarInstitucion(curso.getCarrera().getInstitucion().getIdInstitucion(), idInstitucion);
+        eliminar(id);
+    }
+
+    // Reactivar curso validando que pertenece a la misma institucion
+    public void reactivar(Long id, Long idInstitucion) {
+        Curso curso = buscarPorId(id);
+        verificarInstitucion(curso.getCarrera().getInstitucion().getIdInstitucion(), idInstitucion);
+        reactivar(id);
     }
 }

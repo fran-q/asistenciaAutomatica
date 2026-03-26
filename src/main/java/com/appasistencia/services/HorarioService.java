@@ -17,6 +17,7 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// Servicio: logica de negocio para horarios de clase
 @Service
 @Transactional
 public class HorarioService {
@@ -31,7 +32,15 @@ public class HorarioService {
 
     @Transactional(readOnly = true)
     public List<HorarioResponseDTO> listarTodos() {
-        return horarioRepository.findByActivoTrue().stream()
+        return horarioRepository.findAll().stream()
+                .map(HorarioResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    // Listar filtrado por institucion
+    @Transactional(readOnly = true)
+    public List<HorarioResponseDTO> listarTodos(Long idInstitucion) {
+        return horarioRepository.findByInstitucion(idInstitucion).stream()
                 .map(HorarioResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -66,6 +75,7 @@ public class HorarioService {
         }
     }
 
+    // Crear validando dia, horas y que horaFin > horaInicio
     public HorarioResponseDTO crear(HorarioDTO dto) {
         Asignacion asignacion = asignacionRepository.findById(dto.getIdAsignacion())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Asignacion", dto.getIdAsignacion()));
@@ -110,9 +120,16 @@ public class HorarioService {
         return HorarioResponseDTO.fromEntity(horarioRepository.save(horario));
     }
 
+    // Eliminar (borrado logico)
     public void eliminar(Long id) {
         Horario horario = buscarPorId(id);
         horario.setActivo(false);
+        horarioRepository.save(horario);
+    }
+
+    public void reactivar(Long id) {
+        Horario horario = buscarPorId(id);
+        horario.setActivo(true);
         horarioRepository.save(horario);
     }
 
@@ -122,5 +139,49 @@ public class HorarioService {
         } catch (DateTimeParseException e) {
             throw new OperacionInvalidaException("Formato invalido para " + campo + ": " + time + ". Use formato HH:mm");
         }
+    }
+
+    // === Metodos con validacion de institucion ===
+    // Estos metodos verifican que el recurso pertenezca a la institucion del usuario autenticado
+
+    // Verifica que el recurso pertenezca a la institucion del usuario autenticado
+    private void verificarInstitucion(Long idInstitucionRecurso, Long idInstitucionUsuario) {
+        if (!idInstitucionRecurso.equals(idInstitucionUsuario)) {
+            throw new RecursoNoEncontradoException("Horario", 0L);
+        }
+    }
+
+    // Obtener la institucion de un horario navegando la cadena de relaciones
+    private Long obtenerIdInstitucionDeHorario(Horario horario) {
+        return horario.getAsignacion().getCursoMateria().getCurso().getCarrera().getInstitucion().getIdInstitucion();
+    }
+
+    // Obtener horario por ID validando que pertenece a la misma institucion
+    @Transactional(readOnly = true)
+    public HorarioResponseDTO obtenerPorId(Long id, Long idInstitucion) {
+        Horario horario = buscarPorId(id);
+        verificarInstitucion(obtenerIdInstitucionDeHorario(horario), idInstitucion);
+        return HorarioResponseDTO.fromEntity(horario);
+    }
+
+    // Actualizar horario validando que pertenece a la misma institucion
+    public HorarioResponseDTO actualizar(Long id, HorarioDTO dto, Long idInstitucion) {
+        Horario horario = buscarPorId(id);
+        verificarInstitucion(obtenerIdInstitucionDeHorario(horario), idInstitucion);
+        return actualizar(id, dto);
+    }
+
+    // Eliminar horario validando que pertenece a la misma institucion
+    public void eliminar(Long id, Long idInstitucion) {
+        Horario horario = buscarPorId(id);
+        verificarInstitucion(obtenerIdInstitucionDeHorario(horario), idInstitucion);
+        eliminar(id);
+    }
+
+    // Reactivar horario validando que pertenece a la misma institucion
+    public void reactivar(Long id, Long idInstitucion) {
+        Horario horario = buscarPorId(id);
+        verificarInstitucion(obtenerIdInstitucionDeHorario(horario), idInstitucion);
+        reactivar(id);
     }
 }

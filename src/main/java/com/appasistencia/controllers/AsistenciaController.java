@@ -3,6 +3,7 @@ package com.appasistencia.controllers;
 import com.appasistencia.dtos.AsistenciaDTO;
 import com.appasistencia.dtos.response.AsistenciaResponseDTO;
 import com.appasistencia.services.AsistenciaService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// Controlador REST: endpoints de registros de asistencia
 @RestController
 @RequestMapping("/api/asistencias")
 public class AsistenciaController {
@@ -21,13 +23,17 @@ public class AsistenciaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<AsistenciaResponseDTO>> listarTodas() {
-        return ResponseEntity.ok(asistenciaService.listarTodas());
+    public ResponseEntity<List<AsistenciaResponseDTO>> listarTodas(HttpServletRequest request) {
+        Long idInst = (Long) request.getAttribute("idInstitucion");
+        return ResponseEntity.ok(asistenciaService.listarTodas(idInst));
     }
 
+    // GET /api/asistencias/{id} - obtener asistencia por ID validando institucion
     @GetMapping("/{id}")
-    public ResponseEntity<AsistenciaResponseDTO> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(asistenciaService.obtenerPorId(id));
+    public ResponseEntity<AsistenciaResponseDTO> obtenerPorId(@PathVariable Long id, HttpServletRequest request) {
+        // Obtener ID de institucion del token JWT
+        Long idInst = (Long) request.getAttribute("idInstitucion");
+        return ResponseEntity.ok(asistenciaService.obtenerPorId(id, idInst));
     }
 
     @GetMapping("/profesor/{idProfesor}")
@@ -56,14 +62,32 @@ public class AsistenciaController {
         return new ResponseEntity<>(creada, HttpStatus.CREATED);
     }
 
+    // PUT /api/asistencias/{id} - actualizar asistencia validando institucion
     @PutMapping("/{id}")
-    public ResponseEntity<AsistenciaResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody AsistenciaDTO dto) {
-        return ResponseEntity.ok(asistenciaService.actualizar(id, dto));
+    public ResponseEntity<AsistenciaResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody AsistenciaDTO dto, HttpServletRequest request) {
+        // Obtener ID de institucion del token JWT
+        Long idInst = (Long) request.getAttribute("idInstitucion");
+        // Validar que la entidad pertenece a la misma institucion
+        return ResponseEntity.ok(asistenciaService.actualizar(id, dto, idInst));
     }
 
+    // DELETE /api/asistencias/{id} - baja logica validando institucion
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        asistenciaService.eliminar(id);
+    public ResponseEntity<Void> eliminar(@PathVariable Long id, HttpServletRequest request) {
+        // Obtener ID de institucion del token JWT
+        Long idInst = (Long) request.getAttribute("idInstitucion");
+        // Validar que la entidad pertenece a la misma institucion
+        asistenciaService.eliminar(id, idInst);
+        return ResponseEntity.noContent().build();
+    }
+
+    // PATCH /api/asistencias/{id}/reactivar - reactivar asistencia validando institucion
+    @PatchMapping("/{id}/reactivar")
+    public ResponseEntity<Void> reactivar(@PathVariable Long id, HttpServletRequest request) {
+        // Obtener ID de institucion del token JWT
+        Long idInst = (Long) request.getAttribute("idInstitucion");
+        // Validar que la entidad pertenece a la misma institucion
+        asistenciaService.reactivar(id, idInst);
         return ResponseEntity.noContent().build();
     }
 }

@@ -3,6 +3,7 @@ package com.appasistencia.dtos.response;
 import com.appasistencia.models.Institucion;
 import java.time.LocalDateTime;
 
+// DTO de respuesta: datos de una institucion educativa
 public class InstitucionResponseDTO {
 
     private Long idInstitucion;
@@ -10,11 +11,13 @@ public class InstitucionResponseDTO {
     private String direccion;
     private String telefono;
     private String email;
+    // Campos de auditoria
     private LocalDateTime fechaCreacion;
     private boolean activo;
 
     public InstitucionResponseDTO() {}
 
+    // Conversion desde entidad
     public static InstitucionResponseDTO fromEntity(Institucion institucion) {
         InstitucionResponseDTO dto = new InstitucionResponseDTO();
         dto.idInstitucion = institucion.getIdInstitucion();

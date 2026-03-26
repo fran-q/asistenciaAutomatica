@@ -4,14 +4,17 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+// DTO de entrada: registrar asistencia de un profesor a una clase
 public class AsistenciaDTO {
 
-    @NotNull(message = "El ID del profesor es obligatorio")
+    // Relaciones (IDs)
+    @NotNull(message = "Debe seleccionar un profesor")
     private Long idProfesor;
 
-    @NotNull(message = "El ID de la asignación es obligatorio")
+    // Cargo es opcional al registrar asistencia manual
     private Long idAsignacion;
 
+    // Datos de la asistencia
     @NotBlank(message = "La fecha es obligatoria")
     private String fecha;
 
@@ -20,6 +23,7 @@ public class AsistenciaDTO {
 
     private String horaSalida;
 
+    // Estado y modo de registro (PRESENTE, AUSENTE, TARDANZA / MANUAL, FACIAL)
     @NotBlank(message = "El estado de asistencia es obligatorio")
     private String estado;
 

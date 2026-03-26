@@ -11,9 +11,11 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// Manejador global de excepciones: convierte excepciones en respuestas JSON estandarizadas
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    // 404 - Recurso no encontrado
     @ExceptionHandler(RecursoNoEncontradoException.class)
     public ResponseEntity<ApiError> manejarRecursoNoEncontrado(RecursoNoEncontradoException ex) {
         ApiError error = new ApiError(
@@ -23,6 +25,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
+    // 409 - Recurso duplicado
     @ExceptionHandler(RecursoDuplicadoException.class)
     public ResponseEntity<ApiError> manejarRecursoDuplicado(RecursoDuplicadoException ex) {
         ApiError error = new ApiError(
@@ -32,6 +35,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
+    // 400 - Operacion invalida (regla de negocio)
     @ExceptionHandler(OperacionInvalidaException.class)
     public ResponseEntity<ApiError> manejarOperacionInvalida(OperacionInvalidaException ex) {
         ApiError error = new ApiError(
@@ -41,6 +45,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
+    // 400 - Errores de validacion (@Valid), retorna detalle por campo
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> manejarValidacion(MethodArgumentNotValidException ex) {
         List<String> detalles = ex.getBindingResult()
@@ -57,6 +62,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
+    // 400 - Formato de fecha/hora invalido
     @ExceptionHandler(DateTimeParseException.class)
     public ResponseEntity<ApiError> manejarFormatoFecha(DateTimeParseException ex) {
         ApiError error = new ApiError(
@@ -66,6 +72,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
+    // 400 - Tipo de parametro incorrecto (ej: texto en vez de numero)
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiError> manejarTipoArgumento(MethodArgumentTypeMismatchException ex) {
         String mensaje = "El parámetro '" + ex.getName() + "' tiene un valor inválido: " + ex.getValue();
@@ -76,6 +83,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
+    // 500 - Cualquier otra excepcion no manejada
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> manejarExcepcionGeneral(Exception ex) {
         ApiError error = new ApiError(

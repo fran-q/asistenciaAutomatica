@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// Controlador REST: endpoints de notificaciones a alumnos
 @RestController
 @RequestMapping("/api/notificaciones")
 public class NotificacionController {

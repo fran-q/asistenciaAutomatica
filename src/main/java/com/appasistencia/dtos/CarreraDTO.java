@@ -6,8 +6,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+// DTO de entrada: crear/editar carreras academicas
 public class CarreraDTO {
 
+    // Datos de la carrera
     @NotBlank(message = "El nombre de la carrera es obligatorio")
     @Size(min = 2, max = 200, message = "El nombre debe tener entre 2 y 200 caracteres")
     private String nombre;
@@ -23,7 +25,7 @@ public class CarreraDTO {
     @Size(max = 200, message = "El título no puede superar los 200 caracteres")
     private String titulo;
 
-    @NotNull(message = "El ID de la institución es obligatorio")
+    // Relacion (ID)
     private Long idInstitucion;
 
     public CarreraDTO() {}

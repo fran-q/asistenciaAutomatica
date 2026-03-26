@@ -17,6 +17,7 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// Servicio: logica de negocio para registros de asistencia
 @Service
 @Transactional
 public class AsistenciaService {
@@ -35,7 +36,15 @@ public class AsistenciaService {
 
     @Transactional(readOnly = true)
     public List<AsistenciaResponseDTO> listarTodas() {
-        return asistenciaRepository.findByActivoTrue().stream()
+        return asistenciaRepository.findAll().stream()
+                .map(AsistenciaResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    // Listar filtrado por institucion
+    @Transactional(readOnly = true)
+    public List<AsistenciaResponseDTO> listarTodas(Long idInstitucion) {
+        return asistenciaRepository.findByInstitucion(idInstitucion).stream()
                 .map(AsistenciaResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -73,6 +82,7 @@ public class AsistenciaService {
                 .collect(Collectors.toList());
     }
 
+    // Listar por rango de fechas con validacion de orden
     @Transactional(readOnly = true)
     public List<AsistenciaResponseDTO> listarPorRango(String desde, String hasta) {
         LocalDate fechaDesde = parseDate(desde);
@@ -85,11 +95,18 @@ public class AsistenciaService {
                 .collect(Collectors.toList());
     }
 
+    // Crear validando enums de estado y modo de registro
+    // El cargo (asignacion) es opcional en asistencias manuales
     public AsistenciaResponseDTO crear(AsistenciaDTO dto) {
         UsuarioProfesor profesor = profesorRepository.findById(dto.getIdProfesor())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Profesor", dto.getIdProfesor()));
-        Asignacion asignacion = asignacionRepository.findById(dto.getIdAsignacion())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Asignacion", dto.getIdAsignacion()));
+
+        // Cargo opcional: solo se busca si viene un ID
+        Asignacion asignacion = null;
+        if (dto.getIdAsignacion() != null) {
+            asignacion = asignacionRepository.findById(dto.getIdAsignacion())
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Asignacion", dto.getIdAsignacion()));
+        }
 
         EstadoAsistencia estado;
         ModoRegistro modo;
@@ -143,9 +160,16 @@ public class AsistenciaService {
         return AsistenciaResponseDTO.fromEntity(asistenciaRepository.save(asistencia));
     }
 
+    // Eliminar (borrado logico)
     public void eliminar(Long id) {
         Asistencia asistencia = buscarPorId(id);
         asistencia.setActivo(false);
+        asistenciaRepository.save(asistencia);
+    }
+
+    public void reactivar(Long id) {
+        Asistencia asistencia = buscarPorId(id);
+        asistencia.setActivo(true);
         asistenciaRepository.save(asistencia);
     }
 
@@ -163,5 +187,44 @@ public class AsistenciaService {
         } catch (DateTimeParseException e) {
             throw new OperacionInvalidaException("Formato invalido para " + campo + ": " + time + ". Use formato HH:mm");
         }
+    }
+
+    // === Metodos con validacion de institucion ===
+    // Estos metodos verifican que el recurso pertenezca a la institucion del usuario autenticado
+
+    // Verifica que el recurso pertenezca a la institucion del usuario autenticado
+    private void verificarInstitucion(Long idInstitucionRecurso, Long idInstitucionUsuario) {
+        if (!idInstitucionRecurso.equals(idInstitucionUsuario)) {
+            throw new RecursoNoEncontradoException("Asistencia", 0L);
+        }
+    }
+
+    // Obtener asistencia por ID validando que pertenece a la misma institucion
+    @Transactional(readOnly = true)
+    public AsistenciaResponseDTO obtenerPorId(Long id, Long idInstitucion) {
+        Asistencia asistencia = buscarPorId(id);
+        verificarInstitucion(asistencia.getProfesor().getUsuario().getInstitucion().getIdInstitucion(), idInstitucion);
+        return AsistenciaResponseDTO.fromEntity(asistencia);
+    }
+
+    // Actualizar asistencia validando que pertenece a la misma institucion
+    public AsistenciaResponseDTO actualizar(Long id, AsistenciaDTO dto, Long idInstitucion) {
+        Asistencia asistencia = buscarPorId(id);
+        verificarInstitucion(asistencia.getProfesor().getUsuario().getInstitucion().getIdInstitucion(), idInstitucion);
+        return actualizar(id, dto);
+    }
+
+    // Eliminar asistencia validando que pertenece a la misma institucion
+    public void eliminar(Long id, Long idInstitucion) {
+        Asistencia asistencia = buscarPorId(id);
+        verificarInstitucion(asistencia.getProfesor().getUsuario().getInstitucion().getIdInstitucion(), idInstitucion);
+        eliminar(id);
+    }
+
+    // Reactivar asistencia validando que pertenece a la misma institucion
+    public void reactivar(Long id, Long idInstitucion) {
+        Asistencia asistencia = buscarPorId(id);
+        verificarInstitucion(asistencia.getProfesor().getUsuario().getInstitucion().getIdInstitucion(), idInstitucion);
+        reactivar(id);
     }
 }

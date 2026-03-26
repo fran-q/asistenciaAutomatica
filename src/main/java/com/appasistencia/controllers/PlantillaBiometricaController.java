@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// Controlador REST: endpoints de plantillas biometricas faciales
 @RestController
 @RequestMapping("/api/plantillas-biometricas")
 public class PlantillaBiometricaController {

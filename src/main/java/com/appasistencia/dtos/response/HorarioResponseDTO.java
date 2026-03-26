@@ -5,18 +5,23 @@ import com.appasistencia.models.Horario;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+// DTO de respuesta: bloque horario de una asignacion
 public class HorarioResponseDTO {
 
     private Long idHorario;
+    // Relacion (ID plano)
     private Long idAsignacion;
+    // Datos del horario
     private DiaSemana diaSemana;
     private LocalTime horaInicio;
     private LocalTime horaFin;
+    // Campos de auditoria
     private LocalDateTime fechaCreacion;
     private boolean activo;
 
     public HorarioResponseDTO() {}
 
+    // Conversion desde entidad - extrae idAsignacion como ID plano
     public static HorarioResponseDTO fromEntity(Horario horario) {
         HorarioResponseDTO dto = new HorarioResponseDTO();
         dto.idHorario = horario.getIdHorario();

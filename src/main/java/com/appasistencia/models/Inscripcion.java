@@ -3,16 +3,18 @@ package com.appasistencia.models;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+// Entidad: Inscripcion de un alumno a un curso
 @Entity
-@Table(name = "inscripcion")
+@Table(name = "inscripcion", uniqueConstraints = @UniqueConstraint(columnNames = {"fk_id_alumno", "fk_id_curso"}))
 public class Inscripcion {
 
-    //Atributos
+    // Identificador
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_alumno_curso")
     private Long idAlumnoCurso;
 
+    // Relaciones: alumno inscripto y curso destino
     @ManyToOne
     @JoinColumn(name = "fk_id_alumno")
     private UsuarioAlumno alumno;
@@ -21,6 +23,7 @@ public class Inscripcion {
     @JoinColumn(name = "fk_id_curso")
     private Curso curso;
 
+    // Auditoria
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 

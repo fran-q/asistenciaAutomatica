@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// Servicio: logica de negocio para perfiles de profesor (vinculados a Usuario)
 @Service
 @Transactional
 public class UsuarioProfesorService {
@@ -29,9 +30,17 @@ public class UsuarioProfesorService {
         this.usuarioRepository = usuarioRepository;
     }
 
+    // Listado (todos o filtrados por institucion)
     @Transactional(readOnly = true)
     public List<UsuarioProfesorResponseDTO> listarTodos() {
-        return profesorRepository.findByActivoTrue().stream()
+        return profesorRepository.findAll().stream()
+                .map(UsuarioProfesorResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<UsuarioProfesorResponseDTO> listarTodos(Long idInstitucion) {
+        return profesorRepository.findByInstitucion(idInstitucion).stream()
                 .map(UsuarioProfesorResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -47,6 +56,7 @@ public class UsuarioProfesorService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Profesor", id));
     }
 
+    // Crear perfil: valida rol PROFESOR, unicidad de legajo y perfil unico por usuario
     public UsuarioProfesorResponseDTO crear(UsuarioProfesorDTO dto) {
         Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario", dto.getIdUsuario()));
@@ -74,8 +84,19 @@ public class UsuarioProfesorService {
         }
     }
 
+    // Actualizar perfil: valida unicidad de legajo si cambio
     public UsuarioProfesorResponseDTO actualizar(Long id, UsuarioProfesorDTO dto) {
         UsuarioProfesor profesor = buscarPorId(id);
+
+        // Si el legajo cambio, verificar que no este en uso por otro profesor
+        if (!profesor.getLegajo().equals(dto.getLegajo())) {
+            profesorRepository.findByLegajo(dto.getLegajo()).ifPresent(otro -> {
+                if (!otro.getIdProfesor().equals(id)) {
+                    throw new RecursoDuplicadoException("Ya existe un profesor con el legajo: " + dto.getLegajo());
+                }
+            });
+        }
+
         profesor.setLegajo(dto.getLegajo());
         profesor.setTitulo(dto.getTitulo());
         if (dto.getCategoria() != null) {
@@ -88,9 +109,55 @@ public class UsuarioProfesorService {
         return UsuarioProfesorResponseDTO.fromEntity(profesorRepository.save(profesor));
     }
 
+    // Baja logica y reactivacion
     public void eliminar(Long id) {
         UsuarioProfesor profesor = buscarPorId(id);
         profesor.setActivo(false);
         profesorRepository.save(profesor);
+    }
+
+    public void reactivar(Long id) {
+        UsuarioProfesor profesor = buscarPorId(id);
+        profesor.setActivo(true);
+        profesorRepository.save(profesor);
+    }
+
+    // === Metodos con validacion de institucion ===
+    // Estos metodos verifican que el recurso pertenezca a la institucion del usuario autenticado
+
+    // Verifica que el recurso pertenezca a la institucion del usuario autenticado
+    private void verificarInstitucion(Long idInstitucionRecurso, Long idInstitucionUsuario) {
+        if (!idInstitucionRecurso.equals(idInstitucionUsuario)) {
+            throw new RecursoNoEncontradoException("Profesor", 0L);
+        }
+    }
+
+    // Obtener profesor por ID validando que pertenece a la misma institucion
+    @Transactional(readOnly = true)
+    public UsuarioProfesorResponseDTO obtenerPorId(Long id, Long idInstitucion) {
+        UsuarioProfesor profesor = buscarPorId(id);
+        verificarInstitucion(profesor.getUsuario().getInstitucion().getIdInstitucion(), idInstitucion);
+        return UsuarioProfesorResponseDTO.fromEntity(profesor);
+    }
+
+    // Actualizar profesor validando que pertenece a la misma institucion
+    public UsuarioProfesorResponseDTO actualizar(Long id, UsuarioProfesorDTO dto, Long idInstitucion) {
+        UsuarioProfesor profesor = buscarPorId(id);
+        verificarInstitucion(profesor.getUsuario().getInstitucion().getIdInstitucion(), idInstitucion);
+        return actualizar(id, dto);
+    }
+
+    // Eliminar profesor validando que pertenece a la misma institucion
+    public void eliminar(Long id, Long idInstitucion) {
+        UsuarioProfesor profesor = buscarPorId(id);
+        verificarInstitucion(profesor.getUsuario().getInstitucion().getIdInstitucion(), idInstitucion);
+        eliminar(id);
+    }
+
+    // Reactivar profesor validando que pertenece a la misma institucion
+    public void reactivar(Long id, Long idInstitucion) {
+        UsuarioProfesor profesor = buscarPorId(id);
+        verificarInstitucion(profesor.getUsuario().getInstitucion().getIdInstitucion(), idInstitucion);
+        reactivar(id);
     }
 }

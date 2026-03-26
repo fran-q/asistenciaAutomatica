@@ -6,31 +6,36 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+// Entidad: Materia o asignatura perteneciente a una carrera
 @Entity
 @Table(name = "materia")
 public class Materia {
 
-    //Atributos
+    // Identificador
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_materia")
     private Long idMateria;
 
+    // Datos de la materia
     private String nombre;
     private String descripcion;
 
     @Column(name = "horas_semanales")
     private int horasSemanales;
 
+    // Carrera a la que pertenece esta materia
     @ManyToOne
     @JoinColumn(name = "fk_id_carrera")
     private Carrera carrera;
 
+    // Auditoria
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
     private boolean activo = true;
 
+    // Relaciones: vinculaciones con cursos donde se dicta esta materia
     @JsonIgnore
     @OneToMany(mappedBy = "materia", cascade = CascadeType.ALL)
     private List<CursoMateria> cursoMaterias = new ArrayList<>();

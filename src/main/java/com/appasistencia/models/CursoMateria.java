@@ -6,16 +6,18 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+// Entidad: Vinculacion entre un curso y una materia
 @Entity
-@Table(name = "curso_materia")
+@Table(name = "curso_materia", uniqueConstraints = @UniqueConstraint(columnNames = {"fk_id_curso", "fk_id_materia"}))
 public class CursoMateria {
 
-    //Atributos
+    // Identificador
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_curso_materia")
     private Long idCursoMateria;
 
+    // Relaciones: curso y materia que se vinculan
     @ManyToOne
     @JoinColumn(name = "fk_id_curso")
     private Curso curso;
@@ -24,13 +26,15 @@ public class CursoMateria {
     @JoinColumn(name = "fk_id_materia")
     private Materia materia;
 
+    // Auditoria
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
     private boolean activo = true;
 
+    // Asignaciones de profesores a esta curso-materia
     @JsonIgnore
-    @OneToMany(mappedBy = "cursoMateria", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "cursoMateria", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Asignacion> asignaciones = new ArrayList<>();
 
     //Constructores

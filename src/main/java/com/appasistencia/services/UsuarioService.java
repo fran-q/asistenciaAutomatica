@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+// Servicio: logica de negocio para usuarios (base de profesores, alumnos y admins)
 @Service
 @Transactional
 public class UsuarioService {
@@ -32,9 +33,17 @@ public class UsuarioService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    // Listado (todos o filtrados por institucion)
     @Transactional(readOnly = true)
     public List<UsuarioResponseDTO> listarTodos() {
-        return usuarioRepository.findByActivoTrue().stream()
+        return usuarioRepository.findAll().stream()
+                .map(UsuarioResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<UsuarioResponseDTO> listarTodos(Long idInstitucion) {
+        return usuarioRepository.findByInstitucionIdInstitucion(idInstitucion).stream()
                 .map(UsuarioResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -45,6 +54,7 @@ public class UsuarioService {
         return UsuarioResponseDTO.fromEntity(usuario);
     }
 
+    // Filtrado por rol (con o sin institucion)
     @Transactional(readOnly = true)
     public List<UsuarioResponseDTO> listarPorRol(String rol) {
         try {
@@ -57,12 +67,28 @@ public class UsuarioService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public List<UsuarioResponseDTO> listarPorRol(String rol, Long idInstitucion) {
+        try {
+            Rol rolEnum = Rol.valueOf(rol.toUpperCase());
+            return usuarioRepository.findByRolAndInstitucionIdInstitucion(rolEnum, idInstitucion).stream()
+                    .map(UsuarioResponseDTO::fromEntity)
+                    .collect(Collectors.toList());
+        } catch (IllegalArgumentException e) {
+            throw new OperacionInvalidaException("Rol inválido: " + rol + ". Valores permitidos: ADMIN, PROFESOR, ALUMNO");
+        }
+    }
+
+    // Crear usuario validando unicidad de email (cruzada con instituciones) y documento
     public UsuarioResponseDTO crear(UsuarioDTO dto) {
         if (usuarioRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new RecursoDuplicadoException("Ya existe un usuario con el email: " + dto.getEmail());
         }
+        if (institucionRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new RecursoDuplicadoException("Este email ya esta registrado como contacto de una institucion");
+        }
         if (usuarioRepository.findByNumeroDocumento(dto.getNumeroDocumento()).isPresent()) {
-            throw new RecursoDuplicadoException("Ya existe un usuario con el documento: " + dto.getNumeroDocumento());
+            throw new RecursoDuplicadoException("El documento ingresado no se puede registrar, por favor ingrese otro");
         }
 
         Institucion institucion = institucionRepository.findById(dto.getIdInstitucion())
@@ -80,14 +106,18 @@ public class UsuarioService {
         return UsuarioResponseDTO.fromEntity(usuarioRepository.save(usuario));
     }
 
+    // Actualizar usuario (re-valida unicidad si email/documento cambian)
     public UsuarioResponseDTO actualizar(Long id, UsuarioDTO dto) {
         Usuario usuario = buscarPorId(id);
 
-        // Validar unicidad de email si cambió
+        // Validar unicidad de email cruzada (usuarios + instituciones) si cambio
         if (!usuario.getEmail().equals(dto.getEmail())) {
             Optional<Usuario> existente = usuarioRepository.findByEmail(dto.getEmail());
             if (existente.isPresent() && !existente.get().getIdUsuario().equals(id)) {
                 throw new RecursoDuplicadoException("Ya existe un usuario con el email: " + dto.getEmail());
+            }
+            if (institucionRepository.findByEmail(dto.getEmail()).isPresent()) {
+                throw new RecursoDuplicadoException("Este email ya esta registrado como contacto de una institucion");
             }
         }
 
@@ -95,7 +125,7 @@ public class UsuarioService {
         if (!usuario.getNumeroDocumento().equals(dto.getNumeroDocumento())) {
             Optional<Usuario> existente = usuarioRepository.findByNumeroDocumento(dto.getNumeroDocumento());
             if (existente.isPresent() && !existente.get().getIdUsuario().equals(id)) {
-                throw new RecursoDuplicadoException("Ya existe un usuario con el documento: " + dto.getNumeroDocumento());
+                throw new RecursoDuplicadoException("El documento ingresado no se puede registrar, por favor ingrese otro");
             }
         }
 
@@ -122,14 +152,60 @@ public class UsuarioService {
         return UsuarioResponseDTO.fromEntity(usuarioRepository.save(usuario));
     }
 
+    // Baja logica y reactivacion
     public void eliminar(Long id) {
         Usuario usuario = buscarPorId(id);
         usuario.setActivo(false);
         usuarioRepository.save(usuario);
     }
 
+    public void reactivar(Long id) {
+        Usuario usuario = buscarPorId(id);
+        usuario.setActivo(true);
+        usuarioRepository.save(usuario);
+    }
+
     public Usuario buscarPorId(Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario", id));
+    }
+
+    // === Metodos con validacion de institucion ===
+    // Estos metodos verifican que el recurso pertenezca a la institucion del usuario autenticado
+
+    // Verifica que el recurso pertenezca a la institucion del usuario autenticado
+    private void verificarInstitucion(Long idInstitucionRecurso, Long idInstitucionUsuario) {
+        if (!idInstitucionRecurso.equals(idInstitucionUsuario)) {
+            throw new RecursoNoEncontradoException("Usuario", 0L);
+        }
+    }
+
+    // Obtener usuario por ID validando que pertenece a la misma institucion
+    @Transactional(readOnly = true)
+    public UsuarioResponseDTO obtenerPorId(Long id, Long idInstitucion) {
+        Usuario usuario = buscarPorId(id);
+        verificarInstitucion(usuario.getInstitucion().getIdInstitucion(), idInstitucion);
+        return UsuarioResponseDTO.fromEntity(usuario);
+    }
+
+    // Actualizar usuario validando que pertenece a la misma institucion
+    public UsuarioResponseDTO actualizar(Long id, UsuarioDTO dto, Long idInstitucion) {
+        Usuario usuario = buscarPorId(id);
+        verificarInstitucion(usuario.getInstitucion().getIdInstitucion(), idInstitucion);
+        return actualizar(id, dto);
+    }
+
+    // Eliminar usuario validando que pertenece a la misma institucion
+    public void eliminar(Long id, Long idInstitucion) {
+        Usuario usuario = buscarPorId(id);
+        verificarInstitucion(usuario.getInstitucion().getIdInstitucion(), idInstitucion);
+        eliminar(id);
+    }
+
+    // Reactivar usuario validando que pertenece a la misma institucion
+    public void reactivar(Long id, Long idInstitucion) {
+        Usuario usuario = buscarPorId(id);
+        verificarInstitucion(usuario.getInstitucion().getIdInstitucion(), idInstitucion);
+        reactivar(id);
     }
 }

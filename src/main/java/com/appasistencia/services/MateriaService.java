@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// Servicio: logica de negocio para materias
 @Service
 @Transactional
 public class MateriaService {
@@ -25,9 +26,17 @@ public class MateriaService {
         this.carreraRepository = carreraRepository;
     }
 
+    // Listado (todas o filtradas por institucion)
     @Transactional(readOnly = true)
     public List<MateriaResponseDTO> listarTodas() {
-        return materiaRepository.findByActivoTrue().stream()
+        return materiaRepository.findAll().stream()
+                .map(MateriaResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<MateriaResponseDTO> listarTodas(Long idInstitucion) {
+        return materiaRepository.findByInstitucion(idInstitucion).stream()
                 .map(MateriaResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -43,6 +52,7 @@ public class MateriaService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Materia", id));
     }
 
+    // Filtrado por carrera (solo activas)
     @Transactional(readOnly = true)
     public List<MateriaResponseDTO> listarPorCarrera(Long idCarrera) {
         return materiaRepository.findByCarreraIdCarreraAndActivoTrue(idCarrera).stream()
@@ -50,6 +60,7 @@ public class MateriaService {
                 .collect(Collectors.toList());
     }
 
+    // CRUD - valida existencia de carrera
     public MateriaResponseDTO crear(MateriaDTO dto) {
         Carrera carrera = carreraRepository.findById(dto.getIdCarrera())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Carrera", dto.getIdCarrera()));
@@ -73,9 +84,55 @@ public class MateriaService {
         return MateriaResponseDTO.fromEntity(materiaRepository.save(materia));
     }
 
+    // Baja logica y reactivacion
     public void eliminar(Long id) {
         Materia materia = buscarPorId(id);
         materia.setActivo(false);
         materiaRepository.save(materia);
+    }
+
+    public void reactivar(Long id) {
+        Materia materia = buscarPorId(id);
+        materia.setActivo(true);
+        materiaRepository.save(materia);
+    }
+
+    // === Metodos con validacion de institucion ===
+    // Estos metodos verifican que el recurso pertenezca a la institucion del usuario autenticado
+
+    // Verifica que el recurso pertenezca a la institucion del usuario autenticado
+    private void verificarInstitucion(Long idInstitucionRecurso, Long idInstitucionUsuario) {
+        if (!idInstitucionRecurso.equals(idInstitucionUsuario)) {
+            throw new RecursoNoEncontradoException("Materia", 0L);
+        }
+    }
+
+    // Obtener materia por ID validando que pertenece a la misma institucion
+    @Transactional(readOnly = true)
+    public MateriaResponseDTO obtenerPorId(Long id, Long idInstitucion) {
+        Materia materia = buscarPorId(id);
+        verificarInstitucion(materia.getCarrera().getInstitucion().getIdInstitucion(), idInstitucion);
+        return MateriaResponseDTO.fromEntity(materia);
+    }
+
+    // Actualizar materia validando que pertenece a la misma institucion
+    public MateriaResponseDTO actualizar(Long id, MateriaDTO dto, Long idInstitucion) {
+        Materia materia = buscarPorId(id);
+        verificarInstitucion(materia.getCarrera().getInstitucion().getIdInstitucion(), idInstitucion);
+        return actualizar(id, dto);
+    }
+
+    // Eliminar materia validando que pertenece a la misma institucion
+    public void eliminar(Long id, Long idInstitucion) {
+        Materia materia = buscarPorId(id);
+        verificarInstitucion(materia.getCarrera().getInstitucion().getIdInstitucion(), idInstitucion);
+        eliminar(id);
+    }
+
+    // Reactivar materia validando que pertenece a la misma institucion
+    public void reactivar(Long id, Long idInstitucion) {
+        Materia materia = buscarPorId(id);
+        verificarInstitucion(materia.getCarrera().getInstitucion().getIdInstitucion(), idInstitucion);
+        reactivar(id);
     }
 }

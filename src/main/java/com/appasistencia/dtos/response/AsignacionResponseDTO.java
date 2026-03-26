@@ -3,16 +3,20 @@ package com.appasistencia.dtos.response;
 import com.appasistencia.models.Asignacion;
 import java.time.LocalDateTime;
 
+// DTO de respuesta: asignacion de un profesor a un curso-materia
 public class AsignacionResponseDTO {
 
     private Long idAsignacion;
+    // Relaciones (IDs planos)
     private Long idProfesor;
     private Long idCursoMateria;
+    // Campos de auditoria
     private LocalDateTime fechaCreacion;
     private boolean activo;
 
     public AsignacionResponseDTO() {}
 
+    // Conversion desde entidad - extrae IDs planos de profesor y curso-materia
     public static AsignacionResponseDTO fromEntity(Asignacion asignacion) {
         AsignacionResponseDTO dto = new AsignacionResponseDTO();
         dto.idAsignacion = asignacion.getIdAsignacion();

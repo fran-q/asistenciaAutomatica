@@ -6,25 +6,33 @@ import com.appasistencia.models.TipoDocumento;
 import com.appasistencia.models.Usuario;
 import java.time.LocalDateTime;
 
+// DTO de respuesta: datos completos de un usuario (sin contrasena)
 public class UsuarioResponseDTO {
 
+    // Datos personales
     private Long idUsuario;
     private String nombre;
     private String apellido;
     private String email;
     private String telefono;
     private String direccion;
+    // Documentacion e identidad
     private TipoDocumento tipoDocumento;
     private String numeroDocumento;
     private Genero genero;
+    // Rol y perfil
     private Rol rol;
     private String fotoPerfil;
+    // Relacion (ID plano, no objeto anidado)
     private Long idInstitucion;
+    // Campos de auditoria
     private LocalDateTime fechaCreacion;
     private boolean activo;
+    private boolean verificado;
 
     public UsuarioResponseDTO() {}
 
+    // Conversion desde entidad - extrae idInstitucion como ID plano
     public static UsuarioResponseDTO fromEntity(Usuario usuario) {
         UsuarioResponseDTO dto = new UsuarioResponseDTO();
         dto.idUsuario = usuario.getIdUsuario();
@@ -43,6 +51,7 @@ public class UsuarioResponseDTO {
         }
         dto.fechaCreacion = usuario.getFechaCreacion();
         dto.activo = usuario.isActivo();
+        dto.verificado = usuario.isVerificado();
         return dto;
     }
 
@@ -61,4 +70,5 @@ public class UsuarioResponseDTO {
     public Long getIdInstitucion() { return idInstitucion; }
     public LocalDateTime getFechaCreacion() { return fechaCreacion; }
     public boolean isActivo() { return activo; }
+    public boolean isVerificado() { return verificado; }
 }

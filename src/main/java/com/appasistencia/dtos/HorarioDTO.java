@@ -3,11 +3,14 @@ package com.appasistencia.dtos;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+// DTO de entrada: definir un bloque horario para una asignacion profesor-materia
 public class HorarioDTO {
 
+    // Relacion (ID)
     @NotNull(message = "El ID de la asignación es obligatorio")
     private Long idAsignacion;
 
+    // Datos del horario
     @NotBlank(message = "El día de la semana es obligatorio")
     private String diaSemana;
 

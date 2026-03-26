@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// Servicio: logica de negocio para relacion curso-materia
 @Service
 @Transactional
 public class CursoMateriaService {
@@ -32,7 +33,15 @@ public class CursoMateriaService {
 
     @Transactional(readOnly = true)
     public List<CursoMateriaResponseDTO> listarTodos() {
-        return cursoMateriaRepository.findByActivoTrue().stream()
+        return cursoMateriaRepository.findAll().stream()
+                .map(CursoMateriaResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    // Listar filtrado por institucion
+    @Transactional(readOnly = true)
+    public List<CursoMateriaResponseDTO> listarTodos(Long idInstitucion) {
+        return cursoMateriaRepository.findByInstitucion(idInstitucion).stream()
                 .map(CursoMateriaResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -55,6 +64,7 @@ public class CursoMateriaService {
                 .collect(Collectors.toList());
     }
 
+    // Crear validando que curso y materia existan
     public CursoMateriaResponseDTO crear(CursoMateriaDTO dto) {
         Curso curso = cursoRepository.findById(dto.getIdCurso())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Curso", dto.getIdCurso()));
@@ -65,9 +75,48 @@ public class CursoMateriaService {
         return CursoMateriaResponseDTO.fromEntity(cursoMateriaRepository.save(cm));
     }
 
+    // Eliminar (borrado logico)
     public void eliminar(Long id) {
         CursoMateria cm = buscarPorId(id);
         cm.setActivo(false);
         cursoMateriaRepository.save(cm);
+    }
+
+    public void reactivar(Long id) {
+        CursoMateria cm = buscarPorId(id);
+        cm.setActivo(true);
+        cursoMateriaRepository.save(cm);
+    }
+
+    // === Metodos con validacion de institucion ===
+    // Estos metodos verifican que el recurso pertenezca a la institucion del usuario autenticado
+
+    // Verifica que el recurso pertenezca a la institucion del usuario autenticado
+    private void verificarInstitucion(Long idInstitucionRecurso, Long idInstitucionUsuario) {
+        if (!idInstitucionRecurso.equals(idInstitucionUsuario)) {
+            throw new RecursoNoEncontradoException("CursoMateria", 0L);
+        }
+    }
+
+    // Obtener curso-materia por ID validando que pertenece a la misma institucion
+    @Transactional(readOnly = true)
+    public CursoMateriaResponseDTO obtenerPorId(Long id, Long idInstitucion) {
+        CursoMateria cm = buscarPorId(id);
+        verificarInstitucion(cm.getCurso().getCarrera().getInstitucion().getIdInstitucion(), idInstitucion);
+        return CursoMateriaResponseDTO.fromEntity(cm);
+    }
+
+    // Eliminar curso-materia validando que pertenece a la misma institucion
+    public void eliminar(Long id, Long idInstitucion) {
+        CursoMateria cm = buscarPorId(id);
+        verificarInstitucion(cm.getCurso().getCarrera().getInstitucion().getIdInstitucion(), idInstitucion);
+        eliminar(id);
+    }
+
+    // Reactivar curso-materia validando que pertenece a la misma institucion
+    public void reactivar(Long id, Long idInstitucion) {
+        CursoMateria cm = buscarPorId(id);
+        verificarInstitucion(cm.getCurso().getCarrera().getInstitucion().getIdInstitucion(), idInstitucion);
+        reactivar(id);
     }
 }

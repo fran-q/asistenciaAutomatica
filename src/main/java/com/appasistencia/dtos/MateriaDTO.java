@@ -6,8 +6,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+// DTO de entrada: crear/editar materias de una carrera
 public class MateriaDTO {
 
+    // Datos de la materia
     @NotBlank(message = "El nombre de la materia es obligatorio")
     @Size(min = 2, max = 200, message = "El nombre debe tener entre 2 y 200 caracteres")
     private String nombre;
@@ -19,6 +21,7 @@ public class MateriaDTO {
     @Max(value = 40, message = "Las horas semanales máximas son 40")
     private int horasSemanales;
 
+    // Relacion (ID)
     @NotNull(message = "El ID de la carrera es obligatorio")
     private Long idCarrera;
 

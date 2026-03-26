@@ -1,4 +1,6 @@
-// Cache for institutions
+// Pagina: CRUD de carreras academicas
+
+// --- Cache de instituciones (dropdown en otros modulos) ---
 let _institucionesCache = null;
 async function getInstitucionesOptions() {
     if (!_institucionesCache) {
@@ -6,12 +8,23 @@ async function getInstitucionesOptions() {
             _institucionesCache = await Api.get('/instituciones');
         } catch { _institucionesCache = []; }
     }
-    return _institucionesCache.map(i => ({ value: i.idInstitucion, label: i.nombre }));
+    return _institucionesCache.filter(i => i.activo !== false).map(i => ({ value: i.idInstitucion, label: i.nombre }));
 }
 
+// --- Cache de carreras (usado por materias.js, cursos.js y otros) ---
+let _carrerasCache = null;
+async function getCarrerasOptions() {
+    if (!_carrerasCache) {
+        try {
+            _carrerasCache = await Api.get('/carreras');
+        } catch { _carrerasCache = []; }
+    }
+    return _carrerasCache.filter(c => c.activo !== false).map(c => ({ value: c.idCarrera, label: c.nombre }));
+}
+
+// --- Configuracion CRUD de carreras ---
 const CarrerasPage = {
     async render() {
-        const opts = await getInstitucionesOptions();
         const page = createCrudPage({
             title: 'Carreras',
             icon: 'bi-journal-bookmark',
@@ -19,33 +32,33 @@ const CarrerasPage = {
             columns: [
                 { label: 'ID', idKey: 'idCarrera' },
                 { label: 'Nombre' },
-                { label: 'Duracion' },
-                { label: 'Institucion' },
-                { label: 'Estado' }
+                { label: 'Titulo' },
+                { label: 'Duracion', width: 'col-sm' },
+                { label: 'Estado', width: 'col-sm' }
+            ],
+            searchFields: [
+                { key: 'nombre', label: 'Nombre', getValue: (c) => c.nombre },
+                { key: 'titulo', label: 'Titulo', getValue: (c) => c.titulo }
             ],
             formFields: [
-                { key: 'nombre', label: 'Nombre', placeholder: 'Nombre de la carrera' },
-                { type: 'row-start' },
-                { key: 'duracionAnios', label: 'Duracion (anios)', type: 'number', placeholder: '4' },
-                { key: 'idInstitucion', label: 'Institucion', type: 'select', options: opts },
-                { type: 'row-end' }
+                { key: 'nombre', label: 'Nombre', placeholder: 'Nombre de la carrera', maxlength: 100 },
+                { key: 'titulo', label: 'Titulo que otorga', placeholder: 'Ej: Tecnico Superior en Informatica', maxlength: 255 },
+                { key: 'descripcion', label: 'Descripcion', type: 'textarea', maxlength: 1000 },
+                { key: 'duracionAnios', label: 'Duracion (anios)', type: 'number', placeholder: '4' }
             ],
             formToDto: (d) => ({
                 nombre: d.nombre,
-                duracionAnios: d.duracionAnios ? parseInt(d.duracionAnios) : null,
-                idInstitucion: d.idInstitucion ? parseInt(d.idInstitucion) : null
+                titulo: d.titulo,
+                descripcion: d.descripcion || null,
+                duracionAnios: d.duracionAnios ? parseInt(d.duracionAnios) : null
             }),
-            mapRow: (c) => {
-                const inst = _institucionesCache?.find(i => i.idInstitucion === c.idInstitucion);
-                return [
-                    c.idCarrera,
-                    c.nombre,
-                    c.duracionAnios ? `${c.duracionAnios} anios` : '-',
-                    inst ? inst.nombre : `#${c.idInstitucion}`,
-                    UI.activoBadge(c.activo)
-                ];
-            },
-            searchFilter: (c, s) => c.nombre.toLowerCase().includes(s)
+            mapRow: (c) => [
+                c.idCarrera,
+                c.nombre,
+                c.titulo || '-',
+                c.duracionAnios ? `${c.duracionAnios} anios` : '-',
+                UI.activoBadge(c.activo)
+            ]
         });
         page.render();
     }

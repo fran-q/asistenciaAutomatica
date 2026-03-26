@@ -4,16 +4,18 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+// Entidad: Registro de asistencia de un profesor a una asignacion
 @Entity
-@Table(name = "asistencia")
+@Table(name = "asistencia", indexes = @Index(columnList = "fecha"))
 public class Asistencia {
 
-    //Atributos
+    // Identificador
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_asistencia")
     private Long idAsistencia;
 
+    // Relaciones: profesor y asignacion registrada
     @ManyToOne
     @JoinColumn(name = "fk_id_profesor")
     private UsuarioProfesor profesor;
@@ -22,6 +24,7 @@ public class Asistencia {
     @JoinColumn(name = "fk_id_asignacion")
     private Asignacion asignacion;
 
+    // Datos del registro de asistencia
     private LocalDate fecha;
 
     @Column(name = "hora_entrada")
@@ -33,12 +36,14 @@ public class Asistencia {
     @Enumerated(EnumType.STRING)
     private EstadoAsistencia estado;
 
+    // Modo en que se registro (facial o manual)
     @Enumerated(EnumType.STRING)
     @Column(name = "modo_registro")
     private ModoRegistro modoRegistro;
 
     private String observaciones;
 
+    // Auditoria
     private boolean activo = true;
 
     //Constructores

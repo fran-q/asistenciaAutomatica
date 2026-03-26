@@ -6,16 +6,18 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+// Entidad: Usuario base del sistema (puede tener perfil de Profesor o Alumno)
 @Entity
 @Table(name = "usuario")
 public class Usuario {
 
-    //Atributos
+    // Identificador
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_usuario")
     private Long idUsuario;
 
+    // Datos personales
     private String nombre;
     private String apellido;
     private String email;
@@ -32,6 +34,7 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     private Genero genero;
 
+    // Credenciales y rol
     private String contrasena;
 
     @Enumerated(EnumType.STRING)
@@ -40,23 +43,31 @@ public class Usuario {
     @Column(name = "foto_perfil")
     private String fotoPerfil;
 
+    // Relacion con la institucion a la que pertenece
     @ManyToOne
     @JoinColumn(name = "fk_id_institucion")
     private Institucion institucion;
 
+    // Auditoria
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
     private boolean activo = true;
 
+    // Verificacion de email (true por defecto; solo auto-registro de admins lo pone en false)
+    @Column(columnDefinition = "boolean default true")
+    private boolean verificado = true;
+
+    // Perfiles opcionales: profesor y/o alumno vinculados a este usuario
     @JsonIgnore
-    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "usuario", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private UsuarioProfesor usuarioProfesor;
 
     @JsonIgnore
-    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "usuario", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private UsuarioAlumno usuarioAlumno;
 
+    // Plantillas biometricas para reconocimiento facial
     @JsonIgnore
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PlantillaBiometrica> plantillasBiometricas = new ArrayList<>();
@@ -79,6 +90,7 @@ public class Usuario {
         this.rol = rol;
         this.fechaCreacion = LocalDateTime.now();
         this.activo = true;
+        this.verificado = true;
     }
 
     //Getters y Setters
@@ -182,6 +194,13 @@ public class Usuario {
     }
     public void setActivo(boolean activo) {
         this.activo = activo;
+    }
+
+    public boolean isVerificado() {
+        return verificado;
+    }
+    public void setVerificado(boolean verificado) {
+        this.verificado = verificado;
     }
 
     public UsuarioProfesor getUsuarioProfesor() {

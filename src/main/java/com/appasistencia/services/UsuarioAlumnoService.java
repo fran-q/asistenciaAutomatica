@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// Servicio: logica de negocio para perfiles de alumno (vinculados a Usuario)
 @Service
 @Transactional
 public class UsuarioAlumnoService {
@@ -28,9 +29,17 @@ public class UsuarioAlumnoService {
         this.usuarioRepository = usuarioRepository;
     }
 
+    // Listado (todos o filtrados por institucion)
     @Transactional(readOnly = true)
     public List<UsuarioAlumnoResponseDTO> listarTodos() {
-        return alumnoRepository.findByActivoTrue().stream()
+        return alumnoRepository.findAll().stream()
+                .map(UsuarioAlumnoResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<UsuarioAlumnoResponseDTO> listarTodos(Long idInstitucion) {
+        return alumnoRepository.findByInstitucion(idInstitucion).stream()
                 .map(UsuarioAlumnoResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -46,6 +55,7 @@ public class UsuarioAlumnoService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Alumno", id));
     }
 
+    // Crear perfil: valida rol ALUMNO, unicidad de legajo y perfil unico por usuario
     public UsuarioAlumnoResponseDTO crear(UsuarioAlumnoDTO dto) {
         Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario", dto.getIdUsuario()));
@@ -66,16 +76,73 @@ public class UsuarioAlumnoService {
         return UsuarioAlumnoResponseDTO.fromEntity(alumnoRepository.save(alumno));
     }
 
+    // Actualizar perfil: valida unicidad de legajo si cambio
     public UsuarioAlumnoResponseDTO actualizar(Long id, UsuarioAlumnoDTO dto) {
         UsuarioAlumno alumno = buscarPorId(id);
+
+        // Si el legajo cambio, verificar que no este en uso por otro alumno
+        if (!alumno.getLegajo().equals(dto.getLegajo())) {
+            alumnoRepository.findByLegajo(dto.getLegajo()).ifPresent(otro -> {
+                if (!otro.getIdAlumno().equals(id)) {
+                    throw new RecursoDuplicadoException("Ya existe un alumno con el legajo: " + dto.getLegajo());
+                }
+            });
+        }
+
         alumno.setLegajo(dto.getLegajo());
         alumno.setPromedio(dto.getPromedio());
         return UsuarioAlumnoResponseDTO.fromEntity(alumnoRepository.save(alumno));
     }
 
+    // Baja logica y reactivacion
     public void eliminar(Long id) {
         UsuarioAlumno alumno = buscarPorId(id);
         alumno.setActivo(false);
         alumnoRepository.save(alumno);
+    }
+
+    public void reactivar(Long id) {
+        UsuarioAlumno alumno = buscarPorId(id);
+        alumno.setActivo(true);
+        alumnoRepository.save(alumno);
+    }
+
+    // === Metodos con validacion de institucion ===
+    // Estos metodos verifican que el recurso pertenezca a la institucion del usuario autenticado
+
+    // Verifica que el recurso pertenezca a la institucion del usuario autenticado
+    private void verificarInstitucion(Long idInstitucionRecurso, Long idInstitucionUsuario) {
+        if (!idInstitucionRecurso.equals(idInstitucionUsuario)) {
+            throw new RecursoNoEncontradoException("Alumno", 0L);
+        }
+    }
+
+    // Obtener alumno por ID validando que pertenece a la misma institucion
+    @Transactional(readOnly = true)
+    public UsuarioAlumnoResponseDTO obtenerPorId(Long id, Long idInstitucion) {
+        UsuarioAlumno alumno = buscarPorId(id);
+        verificarInstitucion(alumno.getUsuario().getInstitucion().getIdInstitucion(), idInstitucion);
+        return UsuarioAlumnoResponseDTO.fromEntity(alumno);
+    }
+
+    // Actualizar alumno validando que pertenece a la misma institucion
+    public UsuarioAlumnoResponseDTO actualizar(Long id, UsuarioAlumnoDTO dto, Long idInstitucion) {
+        UsuarioAlumno alumno = buscarPorId(id);
+        verificarInstitucion(alumno.getUsuario().getInstitucion().getIdInstitucion(), idInstitucion);
+        return actualizar(id, dto);
+    }
+
+    // Eliminar alumno validando que pertenece a la misma institucion
+    public void eliminar(Long id, Long idInstitucion) {
+        UsuarioAlumno alumno = buscarPorId(id);
+        verificarInstitucion(alumno.getUsuario().getInstitucion().getIdInstitucion(), idInstitucion);
+        eliminar(id);
+    }
+
+    // Reactivar alumno validando que pertenece a la misma institucion
+    public void reactivar(Long id, Long idInstitucion) {
+        UsuarioAlumno alumno = buscarPorId(id);
+        verificarInstitucion(alumno.getUsuario().getInstitucion().getIdInstitucion(), idInstitucion);
+        reactivar(id);
     }
 }

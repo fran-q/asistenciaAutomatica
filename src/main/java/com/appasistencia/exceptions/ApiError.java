@@ -3,6 +3,7 @@ package com.appasistencia.exceptions;
 import java.time.LocalDateTime;
 import java.util.List;
 
+// Formato estandar de respuesta de error de la API
 public class ApiError {
 
     private int status;
@@ -20,6 +21,7 @@ public class ApiError {
         this.timestamp = LocalDateTime.now();
     }
 
+    // Constructor con lista de detalles (usado en errores de validacion)
     public ApiError(int status, String mensaje, List<String> detalles) {
         this.status = status;
         this.mensaje = mensaje;

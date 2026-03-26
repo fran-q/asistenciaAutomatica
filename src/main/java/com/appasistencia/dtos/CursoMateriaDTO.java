@@ -2,8 +2,10 @@ package com.appasistencia.dtos;
 
 import jakarta.validation.constraints.NotNull;
 
+// DTO de entrada: vincular una materia a un curso
 public class CursoMateriaDTO {
 
+    // Relaciones (IDs)
     @NotNull(message = "El ID del curso es obligatorio")
     private Long idCurso;
 

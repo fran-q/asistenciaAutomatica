@@ -9,9 +9,12 @@
     <link href="css/styles.css" rel="stylesheet">
 </head>
 <body>
+    <!-- Auth Screen (login/register) -->
+    <div id="auth-screen" class="auth-screen" style="display:none;"></div>
+
     <!-- Sidebar -->
     <nav id="sidebar" class="sidebar">
-        <div class="sidebar-header">
+        <div class="sidebar-header" id="sidebar-toggle" title="Colapsar/expandir menú">
             <i class="bi bi-clipboard-check"></i>
             <span class="sidebar-title">Asistencia</span>
         </div>
@@ -20,8 +23,8 @@
                 <i class="bi bi-grid-1x2"></i><span>Dashboard</span>
             </li>
             <li class="nav-section">Personas</li>
-            <li class="nav-item" data-page="usuarios">
-                <i class="bi bi-people"></i><span>Usuarios</span>
+            <li class="nav-item" data-page="administradores">
+                <i class="bi bi-shield-lock"></i><span>Administradores</span>
             </li>
             <li class="nav-item" data-page="profesores">
                 <i class="bi bi-person-badge"></i><span>Profesores</span>
@@ -30,24 +33,18 @@
                 <i class="bi bi-mortarboard"></i><span>Alumnos</span>
             </li>
             <li class="nav-section">Academico</li>
-            <li class="nav-item" data-page="instituciones">
-                <i class="bi bi-building"></i><span>Instituciones</span>
-            </li>
             <li class="nav-item" data-page="carreras">
                 <i class="bi bi-journal-bookmark"></i><span>Carreras</span>
-            </li>
-            <li class="nav-item" data-page="cursos">
-                <i class="bi bi-collection"></i><span>Cursos</span>
             </li>
             <li class="nav-item" data-page="materias">
                 <i class="bi bi-book"></i><span>Materias</span>
             </li>
-            <li class="nav-item" data-page="curso-materias">
-                <i class="bi bi-link-45deg"></i><span>Curso-Materia</span>
+            <li class="nav-item" data-page="cursos">
+                <i class="bi bi-collection"></i><span>Cursos</span>
             </li>
             <li class="nav-section">Gestion</li>
             <li class="nav-item" data-page="asignaciones">
-                <i class="bi bi-diagram-3"></i><span>Asignaciones</span>
+                <i class="bi bi-diagram-3"></i><span>Cargos Profesor</span>
             </li>
             <li class="nav-item" data-page="horarios">
                 <i class="bi bi-clock"></i><span>Horarios</span>
@@ -56,7 +53,14 @@
                 <i class="bi bi-calendar-check"></i><span>Asistencias</span>
             </li>
             <li class="nav-item" data-page="inscripciones">
-                <i class="bi bi-pencil-square"></i><span>Inscripciones</span>
+                <i class="bi bi-pencil-square"></i><span>Inscripciones Alumnos</span>
+            </li>
+            <li class="nav-section">Biometria</li>
+            <li class="nav-item" data-page="reconocimiento">
+                <i class="bi bi-camera-video"></i><span>Reconocimiento</span>
+            </li>
+            <li class="nav-item" data-page="enrolamiento">
+                <i class="bi bi-person-bounding-box"></i><span>Carga Biometrica</span>
             </li>
         </ul>
     </nav>
@@ -66,17 +70,20 @@
         <!-- Top Bar -->
         <header class="topbar">
             <div class="topbar-left">
-                <button id="sidebar-toggle" class="btn-icon" title="Toggle sidebar">
-                    <i class="bi bi-list"></i>
-                </button>
                 <nav id="breadcrumb" class="breadcrumb-nav">
                     <span class="breadcrumb-item">Dashboard</span>
                 </nav>
             </div>
             <div class="topbar-right">
-                <button id="theme-toggle" class="btn-icon" title="Cambiar tema">
-                    <i class="bi bi-moon-stars"></i>
-                </button>
+                <span id="user-display-name" class="user-display-name"></span>
+                <div class="topbar-actions">
+                    <button id="theme-toggle" class="topbar-btn" title="Cambiar tema">
+                        <i class="bi bi-moon-stars"></i>
+                    </button>
+                    <button id="logout-btn" class="topbar-btn topbar-btn-logout" title="Cerrar sesion">
+                        <i class="bi bi-box-arrow-right"></i>
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -86,8 +93,8 @@
         </div>
     </main>
 
-    <!-- Toast Container -->
-    <div id="toast-container" class="toast-container"></div>
+    <!-- Notification Container -->
+    <div id="notif-container" class="notif-container"></div>
 
     <!-- Modal Template -->
     <div id="modal-overlay" class="modal-overlay" style="display:none;">
@@ -124,20 +131,22 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/utils/api.js"></script>
     <script src="js/utils/ui.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/utils/crud.js"></script>
     <script src="js/app.js"></script>
+    <!-- Pages: order matters for cache/option function dependencies -->
     <script src="js/pages/dashboard.js"></script>
-    <script src="js/pages/usuarios.js"></script>
+    <script src="js/pages/carreras.js"></script>
     <script src="js/pages/profesores.js"></script>
     <script src="js/pages/alumnos.js"></script>
-    <script src="js/pages/instituciones.js"></script>
-    <script src="js/pages/carreras.js"></script>
-    <script src="js/pages/cursos.js"></script>
+    <script src="js/pages/administradores.js"></script>
     <script src="js/pages/materias.js"></script>
-    <script src="js/pages/curso-materias.js"></script>
+    <script src="js/pages/cursos.js"></script>
     <script src="js/pages/asignaciones.js"></script>
     <script src="js/pages/horarios.js"></script>
     <script src="js/pages/asistencias.js"></script>
     <script src="js/pages/inscripciones.js"></script>
+    <script src="js/pages/reconocimiento.js"></script>
+    <script src="js/pages/enrolamiento.js"></script>
 </body>
 </html>

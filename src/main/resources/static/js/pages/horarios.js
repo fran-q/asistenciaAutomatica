@@ -1,13 +1,19 @@
+// Pagina: CRUD de horarios de clase
+
+// Cache global de asignaciones (reutilizada por asistencias)
 let _asignacionesCache = null;
 
+// Arma opciones de asignaciones activas; cruza multiples caches para el label compuesto
+// Label resultante: "Profesor - Curso / Materia"
 async function getAsignacionesOptions() {
     if (!_asignacionesCache) {
         try { _asignacionesCache = await Api.get('/asignaciones'); } catch { _asignacionesCache = []; }
     }
+    // Carga todas las caches necesarias para resolver nombres
     await getProfesoresOptions();
     await getUsuariosOptions();
     await getCursoMateriasOptions();
-    return _asignacionesCache.map(a => {
+    return _asignacionesCache.filter(a => a.activo !== false).map(a => {
         const prof = _profesoresCache?.find(p => p.idProfesor === a.idProfesor);
         const user = _usuariosCache?.find(u => u.idUsuario === prof?.idUsuario);
         const cm = _cursoMateriasCache?.find(c => c.idCursoMateria === a.idCursoMateria);
@@ -19,6 +25,7 @@ async function getAsignacionesOptions() {
     });
 }
 
+// --- Configuracion CRUD ---
 const HorariosPage = {
     async render() {
         const asigOpts = await getAsignacionesOptions();
@@ -26,14 +33,26 @@ const HorariosPage = {
             title: 'Horarios',
             icon: 'bi-clock',
             endpoint: '/horarios',
+            requiredDeps: [{
+                check: async () => (await getAsignacionesOptions()).length > 0,
+                message: 'No es posible crear un horario, primero registra al menos una asignacion'
+            }],
             columns: [
                 { label: 'ID', idKey: 'idHorario' },
                 { label: 'Asignacion' },
-                { label: 'Dia' },
-                { label: 'Inicio' },
-                { label: 'Fin' },
-                { label: 'Estado' }
+                { label: 'Dia', width: 'col-md' },
+                { label: 'Inicio', width: 'col-sm' },
+                { label: 'Fin', width: 'col-sm' },
+                { label: 'Estado', width: 'col-sm' }
             ],
+            searchFields: [
+                { key: 'asignacion', label: 'Asignacion', getValue: (h) => {
+                    const asig = asigOpts.find(o => o.value === h.idAsignacion);
+                    return asig?.label || '';
+                }},
+                { key: 'dia', label: 'Dia', getValue: (h) => h.diaSemana || '' }
+            ],
+            // Campos: asignacion (select), dia (enum), hora inicio/fin agrupadas en fila
             formFields: [
                 { key: 'idAsignacion', label: 'Asignacion', type: 'select', options: asigOpts },
                 { key: 'diaSemana', label: 'Dia de la semana', type: 'enum', enumName: 'diaSemana' },
@@ -58,10 +77,6 @@ const HorariosPage = {
                     UI.formatTime(h.horaFin),
                     UI.activoBadge(h.activo)
                 ];
-            },
-            searchFilter: (h, s) => {
-                const asig = asigOpts.find(o => o.value === h.idAsignacion);
-                return `${asig?.label} ${h.diaSemana}`.toLowerCase().includes(s);
             }
         });
         page.render();

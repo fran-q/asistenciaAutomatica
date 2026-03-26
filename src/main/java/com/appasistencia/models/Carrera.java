@@ -6,16 +6,18 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+// Entidad: Carrera o programa academico perteneciente a una institucion
 @Entity
 @Table(name = "carrera")
 public class Carrera {
 
-    //Atributos
+    // Identificador
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_carrera")
     private Long idCarrera;
 
+    // Datos de la carrera
     private String nombre;
     private String descripcion;
 
@@ -24,21 +26,24 @@ public class Carrera {
 
     private String titulo;
 
+    // Institucion a la que pertenece esta carrera
     @ManyToOne
     @JoinColumn(name = "fk_id_institucion")
     private Institucion institucion;
 
+    // Auditoria
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
     private boolean activo = true;
 
+    // Relaciones: cursos y materias que componen la carrera
     @JsonIgnore
-    @OneToMany(mappedBy = "carrera", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "carrera", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Curso> cursos = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "carrera", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "carrera", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Materia> materias = new ArrayList<>();
 
     //Constructores
